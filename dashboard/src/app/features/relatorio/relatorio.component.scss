@@ -1,0 +1,685 @@
+// Documento, não tela: largura de página, hierarquia tipográfica e tabelas que
+// sobrevivem à quebra de página. O mesmo markup serve para ler no navegador e
+// para imprimir — o que muda entre os dois está no bloco @media print no fim.
+
+.acoes {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+  padding: 14px 20px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  background: var(--mat-sys-surface);
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+
+    strong {
+      font: var(--mat-sys-title-small);
+      font-weight: 600;
+      color: var(--mat-sys-on-surface);
+    }
+  }
+
+  &__botao {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: none;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 999px;
+    background: var(--mat-sys-primary);
+    color: var(--mat-sys-on-primary);
+    font: var(--mat-sys-label-large);
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--mat-sys-primary) 88%, #000);
+    }
+  }
+
+  &__dica {
+    margin: 0 0 20px;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.doc {
+  --doc-ink: var(--mat-sys-on-surface);
+  --doc-ink2: var(--mat-sys-on-surface-variant);
+  --doc-fio: var(--mat-sys-outline-variant);
+
+  padding: 48px 56px 56px;
+  background: var(--mat-sys-surface);
+  border: 1px solid var(--doc-fio);
+  border-radius: 16px;
+  color: var(--doc-ink);
+}
+
+/* ---------------------------------------------------------------- capa -- */
+.capa {
+  padding-bottom: 32px;
+  border-bottom: 2px solid var(--doc-ink);
+
+  &__marca {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 40px;
+  }
+
+  &__selo {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: var(--app-viz-accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__org {
+    font: var(--mat-sys-label-large);
+    font-weight: 600;
+  }
+
+  &__eyebrow {
+    margin: 0 0 6px;
+    font: var(--mat-sys-label-medium);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--doc-ink2);
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--app-font-display);
+    font-size: 42px;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    max-width: 18ch;
+  }
+
+  &__recorte {
+    margin: 10px 0 0;
+    font: var(--mat-sys-title-medium);
+    color: var(--app-viz-accent);
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 40px;
+    margin: 28px 0 0;
+
+    dt {
+      font: var(--mat-sys-body-small);
+      color: var(--doc-ink2);
+    }
+
+    dd {
+      margin: 2px 0 0;
+      font: var(--mat-sys-body-medium);
+      font-weight: 600;
+    }
+  }
+
+  &__destaque {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 36px 0 0;
+    padding: 24px;
+    border: 1px solid var(--doc-fio);
+    border-radius: 12px;
+
+    &-rotulo {
+      font: var(--mat-sys-label-large);
+      color: var(--doc-ink2);
+    }
+
+    &-valor {
+      font-family: var(--app-font-display);
+      font-size: 52px;
+      font-weight: 600;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    &-nota {
+      font: var(--mat-sys-body-small);
+      color: var(--doc-ink2);
+    }
+  }
+}
+
+.medidor {
+  display: block;
+  height: 6px;
+  margin: 6px 0 2px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--app-viz-accent) 16%, transparent);
+  overflow: hidden;
+
+  &__fill {
+    display: block;
+    height: 100%;
+    background: var(--app-viz-accent);
+  }
+}
+
+.numeros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 20px 28px;
+  margin: 28px 0 0;
+
+  &--quatro {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  &--coluna {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin: 0;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    padding-top: 10px;
+    border-top: 1px solid var(--doc-fio);
+
+    dt {
+      font: var(--mat-sys-body-small);
+      color: var(--doc-ink2);
+    }
+  }
+
+  &__valor {
+    margin: 4px 0 0;
+    font: var(--mat-sys-title-medium);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__nota {
+    margin: 2px 0 0;
+    font: var(--mat-sys-body-small);
+    color: var(--doc-ink2);
+  }
+}
+
+/* -------------------------------------------------------------- seções -- */
+.secao {
+  margin-top: 44px;
+
+  &__cabecalho {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--doc-ink);
+
+    h2 {
+      margin: 0;
+      font: var(--mat-sys-title-large);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    p {
+      margin: 2px 0 0;
+      font: var(--mat-sys-body-small);
+      color: var(--doc-ink2);
+    }
+  }
+
+  // Numeração: aqui a sequência é real (o relatório tem uma ordem de leitura).
+  &__numero {
+    font-family: var(--app-font-display);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--app-viz-accent);
+  }
+}
+
+.subtitulo {
+  margin: 32px 0 12px;
+  font: var(--mat-sys-title-small);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------- tabelas -- */
+.tabela {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  font: var(--mat-sys-body-small);
+
+  th {
+    padding: 8px 10px 8px 0;
+    border-bottom: 1px solid var(--doc-ink);
+    text-align: left;
+    font-weight: 600;
+    color: var(--doc-ink2);
+  }
+
+  td {
+    padding: 9px 10px 9px 0;
+    border-bottom: 1px solid var(--doc-fio);
+    vertical-align: top;
+  }
+
+  &__num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  &__linha {
+    width: 44px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  &__cumpr {
+    width: 130px;
+  }
+
+  &__pct {
+    display: inline-block;
+    margin-top: 3px;
+    font-variant-numeric: tabular-nums;
+
+    &--ok {
+      font-weight: 700;
+      color: var(--app-viz-accent);
+    }
+  }
+
+  &__miudo {
+    font-size: 0.92em;
+    color: var(--doc-ink2);
+  }
+
+  &--compacta td {
+    padding-block: 6px;
+  }
+}
+
+.barra {
+  position: relative;
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--app-viz-neutral) 26%, transparent);
+  overflow: hidden;
+
+  &--mini {
+    height: 6px;
+  }
+
+  &__fill,
+  &__ref {
+    position: absolute;
+    inset: 0 auto 0 0;
+    display: block;
+    height: 100%;
+    border-radius: 4px;
+  }
+
+  &__fill {
+    background: var(--app-viz-accent);
+  }
+
+  &__ref {
+    background: color-mix(in srgb, var(--app-viz-neutral) 45%, transparent);
+  }
+}
+
+.linhas {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  &__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 180px 56px;
+    align-items: center;
+    gap: 4px 14px;
+
+    &--compacto {
+      grid-template-columns: minmax(0, 1fr) 120px 36px;
+    }
+  }
+
+  &__rotulo {
+    font: var(--mat-sys-body-medium);
+  }
+
+  &__valor {
+    text-align: right;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__detalhe {
+    grid-column: 1 / -1;
+    font: var(--mat-sys-body-small);
+    color: var(--doc-ink2);
+  }
+}
+
+/* ------------------------------------------------------------ gráficos -- */
+.figura {
+  margin: 0;
+}
+
+.grafico {
+  width: 100%;
+  height: auto;
+
+  &__grade {
+    stroke: var(--doc-fio);
+    stroke-width: 1;
+  }
+
+  &__rotulo {
+    fill: var(--doc-ink2);
+    font-size: 10px;
+    font-family: Roboto, sans-serif;
+  }
+
+  &__area {
+    fill: color-mix(in srgb, var(--app-viz-accent) 10%, transparent);
+  }
+
+  &__plano {
+    fill: none;
+    stroke: var(--app-viz-neutral);
+    stroke-width: 1.5;
+    stroke-dasharray: 5 5;
+  }
+
+  &__realizado {
+    fill: none;
+    stroke: var(--app-viz-accent);
+    stroke-width: 2;
+  }
+
+  &__parcial {
+    fill: none;
+    stroke: var(--app-viz-accent);
+    stroke-width: 2;
+    stroke-dasharray: 2 3;
+  }
+
+  &__marca {
+    fill: var(--app-viz-accent);
+
+    &--vazada {
+      fill: var(--mat-sys-surface);
+      stroke: var(--app-viz-accent);
+      stroke-width: 2;
+    }
+  }
+}
+
+.legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  margin-top: 8px;
+  font: var(--mat-sys-body-small);
+  color: var(--doc-ink2);
+
+  &__item::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 0;
+    margin-right: 7px;
+    vertical-align: middle;
+    border-top-width: 2px;
+  }
+
+  &__item--realizado::before {
+    border-top-style: solid;
+    border-top-color: var(--app-viz-accent);
+  }
+
+  &__item--plano::before {
+    border-top-style: dashed;
+    border-top-color: var(--app-viz-neutral);
+  }
+
+  &__item--parcial::before {
+    border-top-style: dotted;
+    border-top-color: var(--app-viz-accent);
+  }
+}
+
+.leitura {
+  margin: 18px 0 0;
+  font: var(--mat-sys-body-medium);
+}
+
+.nota {
+  margin: 12px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--doc-ink2);
+}
+
+/* ------------------------------------------------------------- retorno -- */
+.retorno {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 32px;
+  align-items: center;
+
+  &__figura {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__valor {
+    font-family: var(--app-font-display);
+    font-size: 44px;
+    font-weight: 600;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__rotulo {
+    margin-top: 6px;
+    font: var(--mat-sys-body-small);
+    color: var(--doc-ink2);
+  }
+}
+
+.regua {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__linha {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__rotulo {
+    font: var(--mat-sys-body-small);
+    color: var(--doc-ink2);
+  }
+
+  &__trilho {
+    display: block;
+  }
+
+  &__barra {
+    display: block;
+    height: 14px;
+    min-width: 2px;
+    border-radius: 0 3px 3px 0;
+
+    &--aporte {
+      background: var(--app-viz-neutral);
+    }
+
+    &--captado {
+      background: var(--app-viz-accent);
+    }
+  }
+
+  &__valor {
+    font: var(--mat-sys-body-medium);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}
+
+.pontos {
+  display: grid;
+  grid-template-columns: repeat(25, 1fr);
+  gap: 4px;
+  max-width: 420px;
+
+  &__ponto {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--app-viz-neutral) 28%, transparent);
+
+    &--meta {
+      background: var(--app-viz-accent);
+    }
+  }
+}
+
+/* ---------------------------------------------------------- território -- */
+.territorio {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  gap: 36px;
+  align-items: start;
+}
+
+.mapa {
+  width: 100%;
+  height: auto;
+
+  &__tile {
+    fill: var(--app-viz-accent);
+    stroke: var(--doc-fio);
+    stroke-width: 0.5;
+  }
+
+  &__sigla {
+    font-size: 9px;
+    font-family: Roboto, sans-serif;
+    font-weight: 700;
+    fill: var(--doc-ink);
+
+    &--clara {
+      fill: #fff;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------- fim -- */
+.notas {
+  margin: 0;
+
+  dt {
+    margin-top: 16px;
+    font: var(--mat-sys-body-medium);
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 4px 0 0;
+    font: var(--mat-sys-body-small);
+    color: var(--doc-ink2);
+  }
+}
+
+.assinatura {
+  margin: 36px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--doc-fio);
+  font: var(--mat-sys-body-small);
+  color: var(--doc-ink2);
+}
+
+/* ------------------------------------------------------------ impressão --
+   No papel o documento perde a moldura de card, ganha as margens da página e
+   quebra por seção. Tabelas repetem o cabeçalho a cada página. */
+@media print {
+  .acoes,
+  .acoes__dica {
+    display: none;
+  }
+
+  .doc {
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: #fff;
+    --doc-ink: #17120f;
+    --doc-ink2: #574f4d;
+    --doc-fio: #d9d1cf;
+  }
+
+  // Blocos com moldura no papel ficam com fio, não com fundo tingido.
+  .capa__destaque {
+    background: none;
+  }
+
+  .capa {
+    // A capa ocupa a primeira página inteira: a leitura começa limpa.
+    min-height: 60vh;
+  }
+
+  .secao {
+    break-before: page;
+    margin-top: 0;
+  }
+
+  .secao__cabecalho,
+  .subtitulo,
+  .figura,
+  .retorno {
+    break-after: avoid;
+  }
+
+  .tabela {
+    break-inside: auto;
+  }
+
+  .tabela thead {
+    display: table-header-group;
+  }
+
+  .tabela tr,
+  .linhas__item,
+  .numeros__item {
+    break-inside: avoid;
+  }
+}

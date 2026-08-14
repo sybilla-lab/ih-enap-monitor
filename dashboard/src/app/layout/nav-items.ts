@@ -11,4 +11,5 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Home', icon: 'home', route: '/home' },
   { label: 'Retorno da Parceria', icon: 'trending_up', route: '/retorno' },
   { label: 'Impacto Territorial', icon: 'public', route: '/territorio' },
+  { label: 'Relatório Executivo', icon: 'description', route: '/relatorio' },
 ];

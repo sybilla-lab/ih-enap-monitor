@@ -60,12 +60,23 @@ dashboard/src/app/
 │   ├── carregar/               tela de carga da planilha
 │   ├── home/                   visão executiva e avanço rumo a 2028
 │   ├── retorno/                alavancagem, captação e simulador
-│   └── territorio/             cartograma, organizações e detalhe por estado
+│   ├── territorio/             cartograma, organizações e detalhe por estado
+│   └── relatorio/              relatório executivo em documento, para virar PDF
 ├── shared/components/          dock de filtros e stat tile
 └── layout/                     itens do menu
 ```
 
 Angular 19 (standalone + signals), Angular Material M3 com paleta derivada da marca, Chart.js.
+
+## Relatório em PDF
+
+A página **Relatório Executivo** monta um documento com tudo o que as demais telas mostram —
+tabela completa de indicadores, avanço rumo a 2028, retorno e alavancagem, frentes por estado com
+as iniciativas nomeadas e notas metodológicas — respeitando o recorte do filtro. O botão *Gerar
+PDF* abre a impressão do navegador; escolha "Salvar como PDF" e desmarque "Cabeçalhos e rodapés".
+
+O PDF sai em A4 com texto selecionável e gráficos vetoriais (nenhuma captura de tela): os gráficos
+do relatório são SVG desenhados a partir dos mesmos dados, e não o canvas das telas interativas.
 
 ## Publicação
 

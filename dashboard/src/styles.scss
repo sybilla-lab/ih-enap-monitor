@@ -54,6 +54,54 @@ body {
   border-radius: 16px;
 }
 
+/* ------------------------------------------------------------- impressão --
+   O que vai para o papel é só o conteúdo da página aberta: menu, toolbar,
+   filtros e rodapé do shell somem, e o tema escuro cede lugar ao claro (os
+   tokens são light-dark(), então trocar o color-scheme basta — nenhuma cor
+   precisa ser redeclarada aqui). */
+@media print {
+  html,
+  html[data-theme='dark'] {
+    color-scheme: light;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  @page {
+    size: A4;
+    margin: 16mm 14mm;
+  }
+
+  .shell__nav,
+  .shell__toolbar,
+  .shell__footer,
+  app-filter-dock {
+    display: none !important;
+  }
+
+  // O papel é branco: as superfícies tingidas do tema não vão para a impressão.
+  .shell,
+  .shell__content,
+  .mat-drawer-container,
+  .mat-drawer-content {
+    background: #fff !important;
+  }
+
+  .mat-drawer-container,
+  .mat-drawer-content {
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .shell__main {
+    width: 100% !important;
+    max-width: none;
+    padding: 0 !important;
+  }
+}
+
 // Todo número que o leitor compara na vertical usa figuras de largura fixa.
 .app-num {
   font-variant-numeric: tabular-nums;

@@ -27,6 +27,13 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/territorio/territorio.component').then((m) => m.TerritorioComponent),
   },
+  {
+    path: 'relatorio',
+    title: 'Relatório Executivo — Parceria Enap × Impact Hub Brasil',
+    data: { filtros: ['ano', 'linha'] },
+    loadComponent: () =>
+      import('./features/relatorio/relatorio.component').then((m) => m.RelatorioComponent),
+  },
   { path: '', pathMatch: 'full', redirectTo: 'home' },
   { path: '**', redirectTo: 'home' },
 ];

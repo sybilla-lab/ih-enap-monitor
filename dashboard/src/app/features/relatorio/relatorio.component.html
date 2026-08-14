@@ -1,0 +1,515 @@
+<!-- Barra de ação: só existe na tela, nunca no papel. -->
+<div class="acoes">
+  <div class="acoes__texto">
+    <strong>Relatório executivo</strong>
+    <span>{{ recorte() }} — o documento abaixo é o que vai para o PDF.</span>
+  </div>
+  <button type="button" class="acoes__botao" (click)="imprimir()">
+    <mat-icon aria-hidden="true">picture_as_pdf</mat-icon>
+    Gerar PDF
+  </button>
+</div>
+<p class="acoes__dica">
+  Na janela de impressão, escolha <strong>Salvar como PDF</strong> e desmarque
+  <em>Cabeçalhos e rodapés</em> — o documento já traz os seus.
+</p>
+
+<article class="doc">
+  <!-- ------------------------------------------------------------ capa -->
+  <header class="capa">
+    <div class="capa__marca">
+      <span class="capa__selo" aria-hidden="true">IH</span>
+      <span class="capa__org">Enap × Impact Hub Brasil</span>
+    </div>
+
+    <p class="capa__eyebrow">Programa de Parceria · 2024–2028</p>
+    <h1 class="capa__titulo">Relatório executivo de indicadores</h1>
+    <p class="capa__recorte">{{ recorte() }}</p>
+
+    <dl class="capa__meta">
+      <div>
+        <dt>Emitido em</dt>
+        <dd>{{ emitidoEm | date: 'dd/MM/yyyy' }}</dd>
+      </div>
+      <div>
+        <dt>Fonte</dt>
+        <dd>{{ origem()?.arquivo ?? 'Planilha Oficial de Indicadores' }}</dd>
+      </div>
+      <div>
+        <dt>Indicadores no recorte</dt>
+        <dd>{{ panorama().total }}</dd>
+      </div>
+    </dl>
+
+    <!-- O número que abre o documento, como na Home. -->
+    <div class="capa__destaque">
+      <span class="capa__destaque-rotulo">Cumprimento médio das metas</span>
+      <span class="capa__destaque-valor">{{ panorama().valor }}</span>
+      <span class="medidor" role="presentation">
+        <span class="medidor__fill" [style.width.%]="panorama().pct"></span>
+      </span>
+      <span class="capa__destaque-nota">
+        {{ panorama().atingidos }} de {{ panorama().total }} indicadores atingiram a meta do recorte
+      </span>
+    </div>
+
+    <dl class="numeros">
+      @for (n of numerosChave(); track n.rotulo) {
+        <div class="numeros__item">
+          <dt>{{ n.rotulo }}</dt>
+          <dd class="numeros__valor">{{ n.valor }}</dd>
+          <dd class="numeros__nota">{{ n.nota }}</dd>
+        </div>
+      }
+    </dl>
+  </header>
+
+  <!-- --------------------------------------------------- 1. indicadores -->
+  <section class="secao">
+    <header class="secao__cabecalho">
+      <span class="secao__numero">01</span>
+      <div>
+        <h2>Metas e cumprimento</h2>
+        <p>Cada indicador do recorte, com meta, realizado e o quanto foi cumprido.</p>
+      </div>
+    </header>
+
+    <div class="linhas">
+      @for (l of progressoPorLinha(); track l.rotulo) {
+        <div class="linhas__item">
+          <span class="linhas__rotulo">{{ l.rotulo }}</span>
+          <span class="barra" role="presentation">
+            <span class="barra__fill" [style.width.%]="l.preenchimento"></span>
+          </span>
+          <span class="linhas__valor">{{ l.valor }}</span>
+          <span class="linhas__detalhe">{{ l.detalhe }}</span>
+        </div>
+      }
+    </div>
+
+    <table class="tabela">
+      <thead>
+        <tr>
+          <th scope="col" class="tabela__linha">Linha</th>
+          <th scope="col">Indicador</th>
+          <th scope="col" class="tabela__num">Meta</th>
+          <th scope="col" class="tabela__num">Realizado</th>
+          <th scope="col" class="tabela__cumpr">Cumprimento</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (i of tabelaIndicadores(); track i.nome) {
+          <tr>
+            <td class="tabela__linha">{{ linhaCurta(i.linha) }}</td>
+            <td>{{ i.nome }}</td>
+            <td class="tabela__num">{{ i.meta }}</td>
+            <td class="tabela__num">{{ i.realizado }}</td>
+            <td class="tabela__cumpr">
+              <span class="barra barra--mini" role="presentation">
+                <span class="barra__fill" [style.width.%]="i.barra"></span>
+              </span>
+              <span class="tabela__pct" [class.tabela__pct--ok]="i.atingido">{{ i.pctLabel }}</span>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </section>
+
+  <!-- -------------------------------------------------------- 2. avanço -->
+  <section class="secao">
+    <header class="secao__cabecalho">
+      <span class="secao__numero">02</span>
+      <div>
+        <h2>Avanço rumo a 2028</h2>
+        <p>Quanto da meta final já foi entregue, contra o que o cronograma previa.</p>
+      </div>
+    </header>
+
+    @if (grafico(); as g) {
+      <figure class="figura">
+        <svg
+          class="grafico"
+          [attr.viewBox]="'0 0 ' + g.caixa.largura + ' ' + g.caixa.altura"
+          role="img"
+          aria-label="Avanço acumulado rumo à meta de 2028 comparado ao cronograma"
+        >
+          @for (linha of g.grade; track linha.rotulo) {
+            <line
+              class="grafico__grade"
+              [attr.x1]="g.caixa.margemEsq"
+              [attr.x2]="g.caixa.largura - g.caixa.margemDir"
+              [attr.y1]="linha.y"
+              [attr.y2]="linha.y"
+            />
+            <text class="grafico__rotulo" [attr.x]="g.caixa.margemEsq - 8" [attr.y]="linha.y + 3" text-anchor="end">
+              {{ linha.rotulo }}
+            </text>
+          }
+
+          <path class="grafico__area" [attr.d]="g.areaRealizado" />
+          <path class="grafico__plano" [attr.d]="g.linhaPlano" />
+          <path class="grafico__realizado" [attr.d]="g.linhaRealizado" />
+          @if (g.linhaParcial) {
+            <path class="grafico__parcial" [attr.d]="g.linhaParcial" />
+          }
+
+          @for (m of g.marcas; track m.x) {
+            <circle
+              [class]="m.parcial ? 'grafico__marca grafico__marca--vazada' : 'grafico__marca'"
+              [attr.cx]="m.x"
+              [attr.cy]="m.y"
+              r="3.5"
+            />
+          }
+
+          @for (a of g.anos; track a.rotulo) {
+            <text
+              class="grafico__rotulo"
+              [attr.x]="a.x"
+              [attr.y]="g.caixa.altura - 8"
+              text-anchor="middle"
+            >
+              {{ a.rotulo }}
+            </text>
+          }
+        </svg>
+
+        <figcaption class="legenda">
+          <span class="legenda__item legenda__item--realizado">Entregue da meta 2028</span>
+          <span class="legenda__item legenda__item--plano">Plano (metas acumuladas)</span>
+          <span class="legenda__item legenda__item--parcial">Ano em curso (parcial)</span>
+        </figcaption>
+      </figure>
+    }
+
+    @if (leituraAvanco(); as l) {
+      <p class="leitura">
+        Até <strong>{{ l.ano }}</strong>, <strong>{{ l.entregue }}</strong> da meta de 2028 estava
+        entregue. O cronograma {{ l.parcial ? 'prevê' : 'previa' }} <strong>{{ l.plano }}</strong>
+        {{ l.parcial ? 'até o fim do ano' : 'nesse ponto' }}.
+      </p>
+    }
+
+    <table class="tabela tabela--compacta">
+      <thead>
+        <tr>
+          <th scope="col">Ano</th>
+          <th scope="col" class="tabela__num">Entregue da meta 2028</th>
+          <th scope="col" class="tabela__num">Plano</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of pontosAvanco(); track p.ano) {
+          <tr>
+            <td>{{ p.ano }}{{ p.parcial ? ' (em curso)' : '' }}</td>
+            <td class="tabela__num">{{ p.realizado === null ? '—' : percentual(p.realizado) }}</td>
+            <td class="tabela__num">{{ percentual(p.plano) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <p class="nota">
+      Média de {{ totalCumulativos() }} indicadores cumulativos (contagens e valores em R$), cada um
+      normalizado pela própria meta total. NPS e percentuais de execução ficam fora desta leitura:
+      são medidas do período e não se acumulam.
+    </p>
+  </section>
+
+  <!-- ------------------------------------------------------- 3. retorno -->
+  @if (retorno(); as r) {
+    <section class="secao">
+      <header class="secao__cabecalho">
+        <span class="secao__numero">03</span>
+        <div>
+          <h2>Retorno da parceria</h2>
+          <p>O que a Enap aportou e o que voltou em captação de fontes externas.</p>
+        </div>
+      </header>
+
+      <div class="retorno">
+        <div class="retorno__figura">
+          @if (r.alavancagem) {
+            <span class="retorno__valor">{{ r.alavancagem }}</span>
+            <span class="retorno__rotulo">captados para cada R$&nbsp;1,00 aportado</span>
+          } @else {
+            <span class="retorno__valor">—</span>
+            <span class="retorno__rotulo">sem aporte registrado neste recorte</span>
+          }
+        </div>
+
+        <div class="regua">
+          <div class="regua__linha">
+            <span class="regua__rotulo">Aporte da Enap</span>
+            <span class="regua__trilho">
+              <span class="regua__barra regua__barra--aporte" [style.width.%]="r.larguraAporte"></span>
+            </span>
+            <span class="regua__valor">{{ r.aporte }}</span>
+          </div>
+          <div class="regua__linha">
+            <span class="regua__rotulo">Captação externa</span>
+            <span class="regua__trilho">
+              <span class="regua__barra regua__barra--captado" [style.width.%]="r.larguraCaptado"></span>
+            </span>
+            <span class="regua__valor">{{ r.captado }}</span>
+          </div>
+        </div>
+      </div>
+
+      <dl class="numeros numeros--quatro">
+        <div class="numeros__item">
+          <dt>Aporte da Enap</dt>
+          <dd class="numeros__valor">{{ r.aporte }}</dd>
+          <dd class="numeros__nota">{{ r.anosDeAporte }} anos de aporte</dd>
+        </div>
+        <div class="numeros__item">
+          <dt>Captado</dt>
+          <dd class="numeros__valor">{{ r.captado }}</dd>
+          <dd class="numeros__nota">fontes públicas, privadas e internacionais</dd>
+        </div>
+        <div class="numeros__item">
+          <dt>Retorno líquido</dt>
+          <dd class="numeros__valor">{{ r.liquido }}</dd>
+          <dd class="numeros__nota">captado menos aporte</dd>
+        </div>
+        <div class="numeros__item">
+          <dt>ROI</dt>
+          <dd class="numeros__valor">{{ r.roi }}</dd>
+          <dd class="numeros__nota">retorno líquido sobre o aporte</dd>
+        </div>
+      </dl>
+
+      <h3 class="subtitulo">Captação ano a ano</h3>
+      <table class="tabela tabela--compacta">
+        <thead>
+          <tr>
+            <th scope="col">Ano</th>
+            <th scope="col" class="tabela__num">Aporte</th>
+            <th scope="col" class="tabela__num">Meta de captação</th>
+            <th scope="col" class="tabela__num">Captado</th>
+            <th scope="col" class="tabela__cumpr">Proporção</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (a of captacaoPorAno(); track a.ano) {
+            <tr>
+              <td>{{ a.ano }}{{ a.emCurso ? ' (em curso)' : '' }}</td>
+              <td class="tabela__num">{{ a.aporte }}</td>
+              <td class="tabela__num">{{ a.meta }}</td>
+              <td class="tabela__num">{{ a.realizado }}</td>
+              <td class="tabela__cumpr">
+                <span class="barra barra--mini" role="presentation">
+                  <span class="barra__ref" [style.width.%]="a.referencia"></span>
+                  <span class="barra__fill" [style.width.%]="a.preenchimento"></span>
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (projecoes(); as p) {
+        <h3 class="subtitulo">Projeção de novos aportes</h3>
+        <p class="nota">
+          Aplica a alavancagem já observada — {{ p.acumulada }} por R$&nbsp;1,00 no acumulado, e de
+          {{ p.faixa }} entre os anos isolados. É projeção, não compromisso.
+        </p>
+        <table class="tabela tabela--compacta">
+          <thead>
+            <tr>
+              <th scope="col">Novo aporte</th>
+              <th scope="col" class="tabela__num">Captação projetada</th>
+              <th scope="col" class="tabela__num">Faixa observada</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of p.cenarios; track c.aporte) {
+              <tr>
+                <td>{{ c.aporte }}</td>
+                <td class="tabela__num">{{ c.central }}</td>
+                <td class="tabela__num">{{ c.minimo }} a {{ c.maximo }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+
+      @if (escalaDesafios(); as e) {
+        <h3 class="subtitulo">Escala potencial dos desafios</h3>
+        <div class="pontos" role="img" [attr.aria-label]="'Meta de ' + e.meta + ' desafios dentro de um alcance projetado de ' + e.projecao">
+          @for (contratado of e.pontos; track $index) {
+            <span class="pontos__ponto" [class.pontos__ponto--meta]="contratado"></span>
+          }
+        </div>
+        <p class="nota">
+          {{ e.meta }} desafios contratados até 2028 (marcados) dentro de um alcance projetado de
+          {{ e.projecao }} — {{ e.multiplo }}× a meta. {{ e.nota }}
+        </p>
+      }
+    </section>
+  }
+
+  <!-- ---------------------------------------------------- 4. território -->
+  @if (territorio(); as t) {
+    <section class="secao">
+      <header class="secao__cabecalho">
+        <span class="secao__numero">04</span>
+        <div>
+          <h2>Impacto territorial</h2>
+          <p>Onde a parceria chegou: estados, organizações e municípios do recorte.</p>
+        </div>
+      </header>
+
+      @if (t.vazio) {
+        <p class="nota">Sem registros territoriais neste recorte.</p>
+      } @else {
+        <div class="territorio">
+          @if (mapa(); as m) {
+            <svg
+              class="mapa"
+              [attr.viewBox]="'0 0 ' + m.largura + ' ' + m.altura"
+              role="img"
+              aria-label="Cartograma de alcance por estado"
+            >
+              @for (tile of m.tiles; track tile.sigla) {
+                <g>
+                  <rect
+                    class="mapa__tile"
+                    [attr.x]="tile.x"
+                    [attr.y]="tile.y"
+                    [attr.width]="m.lado"
+                    [attr.height]="m.lado"
+                    rx="4"
+                    [attr.fill-opacity]="tile.intensidade"
+                  />
+                  <text
+                    [class]="tile.intensidade > 0.6 ? 'mapa__sigla mapa__sigla--clara' : 'mapa__sigla'"
+                    [attr.x]="tile.x + m.lado / 2"
+                    [attr.y]="tile.y + m.lado / 2 + 3"
+                    text-anchor="middle"
+                  >
+                    {{ tile.sigla }}
+                  </text>
+                </g>
+              }
+            </svg>
+          }
+
+          <div class="territorio__resumo">
+            <dl class="numeros numeros--coluna">
+              <div class="numeros__item">
+                <dt>Estados alcançados</dt>
+                <dd class="numeros__valor">{{ t.ufsAlcancadas }} de {{ t.totalUfs }}</dd>
+              </div>
+              <div class="numeros__item">
+                <dt>Organizações públicas</dt>
+                <dd class="numeros__valor">{{ t.organizacoesPublicas }}</dd>
+                <dd class="numeros__nota">
+                  @for (n of niveis(); track n.nivel) {{{ n.total }} {{ n.nivel.toLowerCase() }}<span>{{ $last ? '' : ' · ' }}</span>}
+                </dd>
+              </div>
+              <div class="numeros__item">
+                <dt>Agentes públicos</dt>
+                <dd class="numeros__valor">{{ t.totalAgentes }}</dd>
+                <dd class="numeros__nota">em {{ t.rankingOrgsPorAgentes.length }} organizações</dd>
+              </div>
+              <div class="numeros__item">
+                <dt>Municípios com projeto</dt>
+                <dd class="numeros__valor">{{ t.municipios.length }}</dd>
+                <dd class="numeros__nota">
+                  @for (m of t.municipios; track m.cidade) {{{ m.cidade }}/{{ m.uf }}<span>{{ $last ? '' : ' · ' }}</span>}
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <h3 class="subtitulo">Frentes por estado</h3>
+        <table class="tabela tabela--compacta">
+          <thead>
+            <tr>
+              <th scope="col">UF</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="tabela__num">Frentes</th>
+              <th scope="col">Iniciativas e prefeituras com agentes</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (e of estados(); track e.uf) {
+              <tr>
+                <td class="tabela__linha">{{ e.uf }}</td>
+                <td>{{ e.nome }}</td>
+                <td class="tabela__num">{{ e.frentes }}</td>
+                <td class="tabela__miudo">{{ e.iniciativas }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+
+        <h3 class="subtitulo">Organizações por agentes engajados</h3>
+        <div class="linhas">
+          @for (o of ranking(); track o.nome) {
+            <div class="linhas__item linhas__item--compacto">
+              <span class="linhas__rotulo">{{ o.nome }}</span>
+              <span class="barra" role="presentation">
+                <span class="barra__fill" [style.width.%]="o.preenchimento"></span>
+              </span>
+              <span class="linhas__valor">{{ o.agentes }}</span>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <!-- -------------------------------------------------------- 5. notas -->
+  <section class="secao secao--notas">
+    <header class="secao__cabecalho">
+      <span class="secao__numero">05</span>
+      <div>
+        <h2>Notas metodológicas</h2>
+        <p>Como cada número deste relatório foi construído.</p>
+      </div>
+    </header>
+
+    <dl class="notas">
+      <dt>Cumprimento médio</dt>
+      <dd>
+        As unidades dos indicadores não são somáveis entre si (contagens, R$, % e NPS). Cada
+        indicador é normalizado pela própria meta, capado em 100%, e o painel exibe a média.
+      </dd>
+
+      <dt>Avanço rumo a 2028</dt>
+      <dd>
+        Realizado acumulado dividido pela meta total da parceria, ano a ano — por isso a curva só
+        cresce. Uma taxa de cumprimento por período, ao contrário, cai quando o ano corrente entra
+        com a meta cheia e o realizado parcial.
+      </dd>
+
+      <dt>Ano em curso</dt>
+      <dd>
+        O último ponto com dados é parcial: a meta do ano já conta inteira, mas o realizado vai até
+        a data de emissão deste relatório.
+      </dd>
+
+      <dt>Frentes por estado</dt>
+      <dd>
+        Somam as iniciativas que alcançaram o estado e as prefeituras com agentes públicos
+        engajados. Registros sem data na origem não entram em recortes por ano.
+      </dd>
+
+      <dt>Retorno e alavancagem</dt>
+      <dd>
+        Aporte é a soma das entradas anuais da Enap; a alavancagem é a captação dividida pelo
+        aporte no recorte. Os textos narrativos da planilha não são usados como fonte.
+      </dd>
+    </dl>
+
+    <p class="assinatura">
+      Painel da Parceria Enap × Impact Hub Brasil · dados de
+      {{ origem()?.arquivo ?? 'planilha oficial' }} · emitido em
+      {{ emitidoEm | date: 'dd/MM/yyyy' }}
+    </p>
+  </section>
+</article>
