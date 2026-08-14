@@ -72,11 +72,16 @@ Angular 19 (standalone + signals), Angular Material M3 com paleta derivada da ma
 
 A página **Relatório Executivo** monta um documento com tudo o que as demais telas mostram —
 tabela completa de indicadores, avanço rumo a 2028, retorno e alavancagem, frentes por estado com
-as iniciativas nomeadas e notas metodológicas — respeitando o recorte do filtro. O botão *Gerar
-PDF* abre a impressão do navegador; escolha "Salvar como PDF" e desmarque "Cabeçalhos e rodapés".
+as iniciativas nomeadas e notas metodológicas — respeitando o recorte do filtro.
 
-O PDF sai em A4 com texto selecionável e gráficos vetoriais (nenhuma captura de tela): os gráficos
-do relatório são SVG desenhados a partir dos mesmos dados, e não o canvas das telas interativas.
+**Baixar PDF** gera o arquivo no próprio navegador e salva direto, com nome pronto
+(`Relatorio-Enap-ImpactHub-<recorte>-<data>.pdf`), sem passar pelo diálogo de impressão. São 8
+páginas A4 com numeração, texto selecionável e gráficos vetoriais — nenhuma imagem embutida. O
+botão **Imprimir** continua disponível para mandar à impressora ou ajustar margens.
+
+Duas bibliotecas fazem esse trabalho e só são baixadas quando usadas: `pdfmake` (montagem do PDF,
+com as fontes padrão do formato) e o SVG gerado em `grafico-svg.ts`, compartilhado entre a tela e
+o documento.
 
 ## Publicação
 

@@ -104,6 +104,28 @@ export interface TileMapa {
   alcance: number;
 }
 
+/**
+ * O mesmo cartograma como string SVG, para o gerador de PDF — que monta o
+ * documento fora do DOM e precisa da marcação pronta, não de elementos Angular.
+ */
+export function svgDoMapa(
+  mapa: { tiles: TileMapa[]; lado: number; largura: number; altura: number },
+  cores: { acento: string; fio: string; tinta: string },
+): string {
+  const tiles = mapa.tiles
+    .map((t) => {
+      const claro = t.intensidade > 0.6;
+      return (
+        `<rect x="${t.x}" y="${t.y}" width="${mapa.lado}" height="${mapa.lado}" rx="4" ` +
+        `fill="${cores.acento}" fill-opacity="${t.intensidade.toFixed(2)}" stroke="${cores.fio}" stroke-width="0.5"/>` +
+        `<text x="${t.x + mapa.lado / 2}" y="${t.y + mapa.lado / 2 + 3}" text-anchor="middle" ` +
+        `font-family="Helvetica" font-size="9" font-weight="bold" fill="${claro ? '#ffffff' : cores.tinta}">${t.sigla}</text>`
+      );
+    })
+    .join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${mapa.largura} ${mapa.altura}" width="${mapa.largura}" height="${mapa.altura}">${tiles}</svg>`;
+}
+
 /** Cartograma do relatório na mesma grade 7×9 usada na tela. */
 export function tilesDoMapa(
   grade: { sigla: string; linha: number; coluna: number }[],

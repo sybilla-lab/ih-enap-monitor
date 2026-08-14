@@ -4,14 +4,21 @@
     <strong>Relatório executivo</strong>
     <span>{{ recorte() }} — o documento abaixo é o que vai para o PDF.</span>
   </div>
-  <button type="button" class="acoes__botao" (click)="imprimir()">
-    <mat-icon aria-hidden="true">picture_as_pdf</mat-icon>
-    Gerar PDF
+  <button type="button" class="acoes__botao" [disabled]="baixando()" (click)="baixarPdf()">
+    <mat-icon aria-hidden="true">download</mat-icon>
+    {{ baixando() ? 'Gerando…' : 'Baixar PDF' }}
+  </button>
+  <button type="button" class="acoes__secundario" (click)="imprimir()">
+    <mat-icon aria-hidden="true">print</mat-icon>
+    Imprimir
   </button>
 </div>
 <p class="acoes__dica">
-  Na janela de impressão, escolha <strong>Salvar como PDF</strong> e desmarque
-  <em>Cabeçalhos e rodapés</em> — o documento já traz os seus.
+  O download sai pronto, com nome e data no arquivo. <strong>Imprimir</strong> usa o diálogo do
+  navegador — útil para mandar direto à impressora ou ajustar margens.
+  @if (erroPdf(); as erro) {
+    <span class="acoes__erro">{{ erro }}</span>
+  }
 </p>
 
 <article class="doc">
@@ -98,17 +105,21 @@
         </tr>
       </thead>
       <tbody>
-        @for (i of tabelaIndicadores(); track i.nome) {
+        <!-- O nome sozinho não identifica: "Percentual de execução do plano de
+             disseminação" se repete nas Linhas I, II e III. -->
+        @for (i of tabelaIndicadores(); track i.linha + i.nome) {
           <tr>
             <td class="tabela__linha">{{ linhaCurta(i.linha) }}</td>
             <td>{{ i.nome }}</td>
             <td class="tabela__num">{{ i.meta }}</td>
             <td class="tabela__num">{{ i.realizado }}</td>
             <td class="tabela__cumpr">
-              <span class="barra barra--mini" role="presentation">
-                <span class="barra__fill" [style.width.%]="i.barra"></span>
+              <span class="tabela__cumpr-conteudo">
+                <span class="barra barra--mini" role="presentation">
+                  <span class="barra__fill" [style.width.%]="i.barra"></span>
+                </span>
+                <span class="tabela__pct" [class.tabela__pct--ok]="i.atingido">{{ i.pctLabel }}</span>
               </span>
-              <span class="tabela__pct" [class.tabela__pct--ok]="i.atingido">{{ i.pctLabel }}</span>
             </td>
           </tr>
         }
@@ -299,9 +310,11 @@
               <td class="tabela__num">{{ a.meta }}</td>
               <td class="tabela__num">{{ a.realizado }}</td>
               <td class="tabela__cumpr">
-                <span class="barra barra--mini" role="presentation">
-                  <span class="barra__ref" [style.width.%]="a.referencia"></span>
-                  <span class="barra__fill" [style.width.%]="a.preenchimento"></span>
+                <span class="tabela__cumpr-conteudo">
+                  <span class="barra barra--mini" role="presentation">
+                    <span class="barra__ref" [style.width.%]="a.referencia"></span>
+                    <span class="barra__fill" [style.width.%]="a.preenchimento"></span>
+                  </span>
                 </span>
               </td>
             </tr>

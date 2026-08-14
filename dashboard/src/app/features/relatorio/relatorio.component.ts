@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { DataService } from '../../core/services/data.service';
@@ -13,7 +13,8 @@ import {
   valoresDoRecorte,
 } from '../../core/util/agregacao.util';
 import { formatMoeda, formatPercentual, formatQuantidade } from '../../core/util/numero.util';
-import { escalaComum, graficoAvanco, tilesDoMapa } from './grafico-svg';
+import { escalaComum, graficoAvanco, svgDoMapa, tilesDoMapa } from './grafico-svg';
+import { ModeloRelatorio, baixarRelatorio } from './relatorio-pdf';
 
 /**
  * Relatório executivo em documento: uma peça pensada para virar PDF pelo
@@ -312,4 +313,119 @@ export class RelatorioComponent {
   imprimir(): void {
     window.print();
   }
+
+  readonly baixando = signal(false);
+  readonly erroPdf = signal<string | null>(null);
+
+  /** Um clique, um arquivo: sem diálogo de impressão e com nome pronto. */
+  async baixarPdf(): Promise<void> {
+    this.baixando.set(true);
+    this.erroPdf.set(null);
+    try {
+      await baixarRelatorio(this.modeloParaPdf());
+    } catch (err) {
+      console.error('Erro ao gerar o PDF:', err);
+      this.erroPdf.set('Não foi possível gerar o PDF. Use "Imprimir" como alternativa.');
+    } finally {
+      this.baixando.set(false);
+    }
+  }
+
+  /** O documento em dados — a mesma informação que a página mostra. */
+  private modeloParaPdf(): ModeloRelatorio {
+    const t = this.territorio();
+    const mapa = this.mapa();
+    const escala = this.escalaDesafios();
+    const leitura = this.leituraAvanco();
+
+    return {
+      recorte: this.recorte(),
+      emitidoEm: this.emitidoEm,
+      arquivo: this.origem()?.arquivo ?? 'Planilha Oficial de Indicadores',
+      panorama: this.panorama(),
+      numerosChave: this.numerosChave(),
+      progressoPorLinha: this.progressoPorLinha(),
+      indicadores: this.tabelaIndicadores().map((i) => ({
+        linha: this.linhaCurta(i.linha),
+        nome: i.nome,
+        meta: i.meta,
+        realizado: i.realizado,
+        pctLabel: i.pctLabel,
+        barra: i.barra,
+        atingido: i.atingido,
+      })),
+      grafico: this.grafico(),
+      avanco: this.pontosAvanco().map((p) => ({
+        ano: p.ano,
+        realizado: p.realizado === null ? '—' : formatPercentual(p.realizado),
+        plano: formatPercentual(p.plano),
+        parcial: p.parcial,
+      })),
+      leituraAvanco: leitura
+        ? `Até ${leitura.ano}, ${leitura.entregue} da meta de 2028 estava entregue. O cronograma ${leitura.parcial ? 'prevê' : 'previa'} ${leitura.plano} ${leitura.parcial ? 'até o fim do ano' : 'nesse ponto'}.`
+        : null,
+      notaAvanco: `Média de ${this.totalCumulativos()} indicadores cumulativos (contagens e valores em R$), cada um normalizado pela própria meta total. NPS e percentuais de execução ficam fora desta leitura: são medidas do período e não se acumulam.`,
+      retorno: this.retorno(),
+      captacaoPorAno: this.captacaoPorAno().map((a) => ({
+        ano: `${a.ano}${a.emCurso ? ' (em curso)' : ''}`,
+        aporte: a.aporte,
+        meta: a.meta,
+        realizado: a.realizado,
+        preenchimento: a.preenchimento,
+        referencia: a.referencia,
+      })),
+      projecoes: this.projecoes(),
+      escala: escala
+        ? { meta: escala.meta, projecao: escala.projecao, multiplo: escala.multiplo, nota: escala.nota }
+        : null,
+      territorio:
+        t && mapa && !t.vazio
+          ? {
+              ufsAlcancadas: t.ufsAlcancadas,
+              totalUfs: t.totalUfs,
+              organizacoes: t.organizacoesPublicas,
+              niveis: this.niveis()
+                .map((n) => `${n.total} ${n.nivel.toLowerCase()}`)
+                .join(' · '),
+              agentes: t.totalAgentes,
+              instituicoes: t.rankingOrgsPorAgentes.length,
+              municipios: t.municipios.map((mu) => `${mu.cidade}/${mu.uf}`).join(' · '),
+              totalMunicipios: t.municipios.length,
+              mapaSvg: svgDoMapa(mapa, { acento: '#a23b4a', fio: '#d9d1cf', tinta: '#17120f' }),
+              estados: this.estados(),
+              ranking: this.ranking(),
+            }
+          : null,
+      notas: NOTAS_METODOLOGICAS,
+    };
+  }
 }
+
+/** Mesmo texto da seção 05 da página — a fonte única das duas saídas. */
+const NOTAS_METODOLOGICAS = [
+  {
+    titulo: 'Cumprimento médio',
+    texto:
+      'As unidades dos indicadores não são somáveis entre si (contagens, R$, % e NPS). Cada indicador é normalizado pela própria meta, capado em 100%, e o painel exibe a média.',
+  },
+  {
+    titulo: 'Avanço rumo a 2028',
+    texto:
+      'Realizado acumulado dividido pela meta total da parceria, ano a ano — por isso a curva só cresce. Uma taxa de cumprimento por período, ao contrário, cai quando o ano corrente entra com a meta cheia e o realizado parcial.',
+  },
+  {
+    titulo: 'Ano em curso',
+    texto:
+      'O último ponto com dados é parcial: a meta do ano já conta inteira, mas o realizado vai até a data de emissão deste relatório.',
+  },
+  {
+    titulo: 'Frentes por estado',
+    texto:
+      'Somam as iniciativas que alcançaram o estado e as prefeituras com agentes públicos engajados. Registros sem data na origem não entram em recortes por ano.',
+  },
+  {
+    titulo: 'Retorno e alavancagem',
+    texto:
+      'Aporte é a soma das entradas anuais da Enap; a alavancagem é a captação dividida pelo aporte no recorte. Os textos narrativos da planilha não são usados como fonte.',
+  },
+];

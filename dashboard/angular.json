@@ -40,7 +40,8 @@
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [
-              "papaparse"
+              "pdfmake/build/pdfmake",
+              "pdfmake/build/standard-fonts/Helvetica"
             ]
           },
           "configurations": {
