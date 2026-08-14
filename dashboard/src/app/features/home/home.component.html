@@ -1,0 +1,78 @@
+@if (!dados.carregado()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Carregando dados do painel" />
+} @else if (dados.erro()) {
+  <section class="app-card home-erro">
+    <h1>Não foi possível carregar os dados</h1>
+    <p>{{ dados.erro() }}</p>
+  </section>
+} @else {
+  <div class="home">
+    <header class="app-masthead">
+      <p class="app-masthead__eyebrow">Programa de Parceria · Enap × Impact Hub Brasil</p>
+      <h1 class="app-masthead__titulo">Inovação aberta para o setor público brasileiro</h1>
+      <p class="app-masthead__lead">
+        A parceria conecta governo, empreendedores e ecossistema de inovação para resolver
+        problemas públicos — de desafios de inovação aberta a ciclos de aceleração, comunidades
+        de conhecimento e captação de recursos.
+      </p>
+    </header>
+
+    <dl class="app-ledger" aria-label="Dados da parceria">
+      @for (fato of fatos(); track fato.rotulo) {
+        <div class="app-ledger__item">
+          <dt class="app-ledger__rotulo">{{ fato.rotulo }}</dt>
+          <dd class="app-ledger__valor">{{ fato.valor }}</dd>
+        </div>
+      }
+    </dl>
+
+    <section class="destaque app-card" aria-label="Panorama executivo">
+      <div class="destaque__hero">
+        <p class="destaque__rotulo">Cumprimento médio das metas</p>
+        <p class="destaque__valor">{{ destaque().valor }}</p>
+        <span class="destaque__meter" role="presentation">
+          <span class="destaque__meter-fill" [style.width.%]="destaque().pct"></span>
+        </span>
+        <p class="destaque__nota">{{ destaque().nota }}</p>
+      </div>
+
+      <dl class="destaque__kpis app-ledger">
+        @for (kpi of kpis(); track kpi.rotulo) {
+          <div class="app-ledger__item">
+            <dt class="app-ledger__rotulo">{{ kpi.rotulo }}</dt>
+            <dd class="app-ledger__valor">{{ kpi.valor }}</dd>
+            @if (kpi.nota) {
+              <dd class="app-ledger__nota">{{ kpi.nota }}</dd>
+            }
+          </div>
+        }
+      </dl>
+    </section>
+
+    <div class="paineis">
+      <section class="app-card bloco">
+        <h2 class="bloco__titulo">Progresso das metas por linha</h2>
+        <p class="bloco__subtitulo">Clique numa linha para filtrar todo o painel.</p>
+        <app-metas-linha />
+      </section>
+
+      <section class="app-card bloco">
+        <h2 class="bloco__titulo">Avanço rumo a 2028</h2>
+        <p class="bloco__subtitulo">Quanto da meta final já foi entregue, contra o cronograma.</p>
+        <app-avanco-chart />
+      </section>
+    </div>
+
+    @if (alavancagem(); as valor) {
+      <a class="ponte app-card" routerLink="/retorno">
+        <mat-icon aria-hidden="true">trending_up</mat-icon>
+        <span class="ponte__texto">
+          Cada <strong>R$&nbsp;1,00</strong> investido pela Enap virou
+          <strong>{{ valor }}</strong> captados de fontes externas.
+        </span>
+        <span class="ponte__cta">Ver o retorno da parceria</span>
+        <mat-icon aria-hidden="true">arrow_forward</mat-icon>
+      </a>
+    }
+  </div>
+}

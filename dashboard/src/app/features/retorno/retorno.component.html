@@ -1,0 +1,149 @@
+@if (!dados.carregado()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Carregando dados de retorno" />
+} @else if (dados.erro() || !parceria()) {
+  <section class="app-card estado-vazio">
+    <h1>Não foi possível carregar o retorno</h1>
+    <p>{{ dados.erro() ?? 'A aba Parceria da planilha não trouxe aporte e captação.' }}</p>
+  </section>
+} @else {
+  <div class="retorno">
+    <header class="app-masthead">
+      <p class="app-masthead__eyebrow">Linha IV · Sustentabilidade e captação</p>
+      <h1 class="app-masthead__titulo">O retorno de cada real investido</h1>
+      <p class="app-masthead__lead">
+        A Enap aportou recursos próprios para viabilizar o programa. O que voltou — captado de
+        fontes públicas, privadas e internacionais, fora do orçamento da União — está medido
+        aqui, ano a ano, na proporção em que aconteceu.
+      </p>
+    </header>
+
+    @if (regua(); as r) {
+      <section class="app-card destaque" aria-label="Alavancagem observada">
+        <div class="destaque__figura">
+          <p class="destaque__rotulo">Alavancagem observada · {{ r.sufixo }}</p>
+          <p class="destaque__valor">{{ r.alavancagem ?? '—' }}</p>
+          <p class="destaque__nota">
+            {{ r.alavancagem ? 'captados para cada R$ 1,00 aportado pela Enap' : r.alternativa }}
+          </p>
+        </div>
+
+        <!-- Régua do real: as barras estão na proporção real entre aporte e
+             captação — é a leitura inteira da página em dois traços. -->
+        <div class="regua">
+          <div class="regua__linha">
+            <span class="regua__rotulo">Aporte da Enap</span>
+            <span class="regua__trilho">
+              <span class="regua__barra regua__barra--aporte" [style.width.%]="r.larguraInvestimento"></span>
+            </span>
+            <span class="regua__valor">{{ r.investimento }}</span>
+          </div>
+          <div class="regua__linha">
+            <span class="regua__rotulo">Captação externa</span>
+            <span class="regua__trilho">
+              <span class="regua__barra regua__barra--captado" [style.width.%]="r.larguraCaptado"></span>
+            </span>
+            <span class="regua__valor">{{ r.captado }}</span>
+          </div>
+        </div>
+      </section>
+    }
+
+    <dl class="app-ledger" aria-label="Números do retorno">
+      @for (n of numeros(); track n.rotulo) {
+        <div class="app-ledger__item">
+          <dt class="app-ledger__rotulo">{{ n.rotulo }}</dt>
+          <dd class="app-ledger__valor">{{ n.valor }}</dd>
+          <dd class="app-ledger__nota">{{ n.nota }}</dd>
+        </div>
+      }
+    </dl>
+
+    <section class="app-card bloco">
+      <h2 class="bloco__titulo">Captação ano a ano</h2>
+      <p class="bloco__subtitulo">
+        Realizado sobre a meta de cada ano. Barra clara é a meta; barra cheia é o captado.
+      </p>
+
+      <ul class="anos">
+        @for (a of captacaoPorAno(); track a.ano) {
+          <li class="anos__item" [class.anos__item--dim]="a.foraDoRecorte">
+            <span class="anos__ano">
+              {{ a.ano }}
+              @if (a.emCurso) { <span class="tag">em curso</span> }
+            </span>
+            <span class="anos__grafico">
+              <span class="anos__meta" [style.width.%]="a.larguraMeta"></span>
+              <span class="anos__realizado" [style.width.%]="a.larguraRealizado"></span>
+            </span>
+            <span class="anos__valores">
+              <strong>{{ a.realizadoLabel }}</strong>
+              <span>meta {{ a.metaLabel }}</span>
+            </span>
+          </li>
+        }
+      </ul>
+
+      <div class="aportes">
+        <h3 class="aportes__titulo">Aportes que sustentaram a captação</h3>
+        <ul class="aportes__lista">
+          @for (a of aportes(); track a.ano) {
+            <li [class.aportes__item--dim]="a.foraDoRecorte">
+              <span>{{ a.ano }}</span><strong>{{ a.valor }}</strong>
+            </li>
+          }
+        </ul>
+      </div>
+    </section>
+
+    @if (parceria(); as p) {
+      <section class="app-card bloco">
+        <h2 class="bloco__titulo">Simulador de alavancagem</h2>
+        <p class="bloco__subtitulo">
+          Quanto um novo aporte projetaria em captação, na proporção que a parceria já entregou.
+          Usa sempre a alavancagem acumulada — não muda com o recorte de ano.
+        </p>
+        <app-simulador-alavancagem
+          [alavancagem]="p.alavancagem"
+          [faixaMin]="faixaAlavancagem()?.min ?? null"
+          [faixaMax]="faixaAlavancagem()?.max ?? null"
+        />
+      </section>
+    }
+
+    @if (escala(); as e) {
+      <section class="app-card bloco">
+        <h2 class="bloco__titulo">Escala potencial dos desafios</h2>
+        <p class="bloco__subtitulo">{{ e.nota || 'Desafios customizados até 2028.' }}</p>
+
+        <div
+          class="pontos"
+          role="img"
+          [attr.aria-label]="
+            'Meta contratada de ' + quantidade(e.meta) + ' desafios dentro de um alcance projetado de ' + quantidade(e.projecao)
+          "
+        >
+          @for (contratado of e.pontos; track $index) {
+            <span class="pontos__ponto" [class.pontos__ponto--contratado]="contratado"></span>
+          }
+        </div>
+
+        <dl class="pontos__legenda">
+          <div>
+            <dt><span class="pontos__amostra pontos__amostra--contratado"></span> Meta contratada</dt>
+            <dd>{{ quantidade(e.meta) }} desafios</dd>
+          </div>
+          <div>
+            <dt><span class="pontos__amostra"></span> Alcance projetado</dt>
+            <dd>{{ quantidade(e.projecao) }} desafios · {{ e.multiplo }}× a meta</dd>
+          </div>
+        </dl>
+      </section>
+    }
+
+    <p class="fonte">
+      Aportes, valor captado e ROI vêm da aba Parceria da Planilha Oficial de Indicadores; a
+      captação por ano vem do indicador financeiro da Linha IV. A alavancagem acumulada é
+      captação ÷ aporte no período; a faixa anual usa a captação e o aporte de cada ano.
+    </p>
+  </div>
+}

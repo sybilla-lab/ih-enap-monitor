@@ -1,0 +1,504 @@
+.territorio {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.estado-vazio {
+  padding: 24px;
+
+  h1,
+  h2 {
+    margin: 0 0 8px;
+    font: var(--mat-sys-title-large);
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 20px;
+  align-items: start;
+
+  &--secundaria {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 959px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.bloco {
+  padding: 20px 24px 24px;
+
+  &__titulo {
+    margin: 0;
+    font: var(--mat-sys-title-large);
+  }
+
+  &__subtitulo {
+    margin: 2px 0 16px;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+/* Faixa de foco: linha única de altura fixa acima do mapa. Fica na largura total
+   (não divide espaço com o título), então trocar o conteúdo no hover nunca reflui
+   o cabeçalho — era o que causava o "pulo". */
+.foco {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  margin-bottom: 12px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-high);
+  white-space: nowrap;
+  overflow: hidden;
+
+  &__uf {
+    font: var(--mat-sys-label-medium);
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: var(--app-viz-accent);
+    color: #fff;
+  }
+
+  &__nome {
+    font: var(--mat-sys-body-medium);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__valor {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__dica {
+    font: var(--mat-sys-body-small);
+    font-style: italic;
+    color: var(--mat-sys-on-surface-variant);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* Aviso contextual: o cruzamento não achou nada, e diz por quê. */
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-high);
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+
+  mat-icon {
+    flex: none;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ---- Ranking de organizações ---- */
+.ranking {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__item {
+    display: grid;
+    width: calc(100% + 16px);
+    grid-template-columns: minmax(0, 1fr) 90px auto;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 8px;
+    margin: 0 -8px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: opacity 120ms ease, background 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+    }
+
+    &--apagado {
+      opacity: 0.35;
+    }
+
+    &--foco {
+      background: color-mix(in srgb, var(--app-viz-accent) 12%, transparent);
+    }
+  }
+
+  &__nome {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font: var(--mat-sys-body-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__pin {
+    font-size: 15px;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    color: var(--app-viz-accent);
+  }
+
+  &__barra {
+    height: 8px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--app-viz-accent) 14%, transparent);
+    overflow: hidden;
+  }
+
+  &__fill {
+    display: block;
+    height: 100%;
+    min-width: 3px;
+    border-radius: 4px;
+    background: var(--app-viz-accent);
+  }
+
+  &__valor {
+    font: var(--mat-sys-label-large);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+/* ---- Municípios ---- */
+.municipios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px 6px 8px;
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: 999px;
+    font: var(--mat-sys-label-large);
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--app-viz-accent);
+    }
+
+    strong {
+      color: var(--mat-sys-on-surface-variant);
+      font-weight: 700;
+    }
+  }
+}
+
+/* ---- Níveis federativos ---- */
+.niveis {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 24px;
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__valor {
+    font: var(--mat-sys-headline-medium);
+    font-weight: 600;
+  }
+
+  &__rotulo {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+/* ---- Painel de detalhe (abre por clique no mapa ou no ranking) ----
+   Fica preso à viewport: no desktop, cartão lateral centrado na vertical, que
+   deixa o mapa livre para o próximo clique; no celular, gaveta inferior com
+   véu. Em nenhum dos dois é preciso rolar a página para ler o detalhe. */
+.detalhe {
+  position: fixed;
+  // Ancorado no canto inferior direito e do tamanho do conteúdo: cresce para
+  // cima só quando a lista é longa, então cobre o mínimo da página.
+  bottom: 24px;
+  right: 20px;
+  z-index: 25;
+  width: min(400px, calc(100vw - 40px));
+  max-height: 72vh;
+  overflow-y: auto;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+  padding: 20px 24px 24px;
+  border-color: color-mix(in srgb, var(--app-viz-accent) 35%, var(--mat-sys-outline-variant));
+  box-shadow: 0 18px 48px light-dark(rgb(0 0 0 / 0.18), rgb(0 0 0 / 0.6));
+  animation: detalhe-sobe 200ms ease-out;
+
+  @media (max-width: 899px) {
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    width: auto;
+    max-height: 70vh;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  // O cabeçalho acompanha a rolagem interna quando a lista é longa.
+  &__cabecalho {
+    position: sticky;
+    top: -20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: -20px -24px 0;
+    padding: 20px 24px 8px;
+    background: var(--mat-sys-surface);
+  }
+
+  &__sigla {
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--app-viz-accent);
+    color: #fff;
+    font: var(--mat-sys-label-medium);
+    font-weight: 700;
+  }
+
+  &__icone {
+    color: var(--app-viz-accent);
+  }
+
+  &__titulo {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font: var(--mat-sys-title-large);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  &__fechar {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border: none;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--mat-sys-on-surface-variant);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--mat-sys-primary) 8%, transparent);
+    }
+  }
+
+  &__resumo {
+    margin: 4px 0 16px;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__secao {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--mat-sys-outline-variant);
+  }
+
+  &__subtitulo {
+    margin: 0 0 10px;
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__texto {
+    margin: 0;
+    max-width: 80ch;
+    font: var(--mat-sys-body-medium);
+  }
+
+  &__vazio {
+    margin: 0;
+    font: var(--mat-sys-body-medium);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+@keyframes detalhe-sobe {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Véu só no celular, onde a gaveta cobre parte do conteúdo. */
+.scrim {
+  display: none;
+
+  @media (max-width: 899px) {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 24;
+    background: rgb(0 0 0 / 0.4);
+  }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 999px;
+  background: var(--mat-sys-surface);
+  font: var(--mat-sys-label-large);
+  color: inherit;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease;
+
+  strong {
+    font-variant-numeric: tabular-nums;
+    color: var(--app-viz-accent);
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
+  }
+
+  &--estatico {
+    cursor: default;
+
+    &:hover {
+      background: var(--mat-sys-surface);
+    }
+  }
+}
+
+/* Lista de iniciativas: nome à esquerda, linha/ano como metadado à direita. */
+.iniciativas {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  // Duas colunas fixas: o nome quebra dentro da coluna da esquerda e o
+  // metadado fica sempre alinhado à direita, na mesma linha de base — antes o
+  // flex-wrap jogava o metadado para baixo só nos nomes longos.
+  &__item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 2px 12px;
+    padding: 10px 0;
+    border-top: 1px solid var(--mat-sys-outline-variant);
+
+    &:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    // Coluna estreita demais para as duas: empilha de propósito, alinhado.
+    @media (max-width: 519px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__nome {
+    font: var(--mat-sys-body-medium);
+    font-weight: 500;
+    text-wrap: pretty;
+  }
+
+  &__meta {
+    font: var(--mat-sys-body-small);
+    font-variant-numeric: tabular-nums;
+    color: var(--mat-sys-on-surface-variant);
+    white-space: nowrap;
+    text-align: right;
+
+    @media (max-width: 519px) {
+      text-align: left;
+    }
+  }
+}
+
+.fonte {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

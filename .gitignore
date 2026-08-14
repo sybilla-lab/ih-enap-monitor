@@ -1,0 +1,40 @@
+# --------------------------------------------------------------------------
+# Dados da parceria — NADA disto vai para o repositório.
+#
+# O material recebido da Enap/Impact Hub é confidencial e o painel foi feito
+# para não depender dele em disco: a planilha é carregada no navegador de quem
+# abre o dashboard (ver src/app/features/carregar). Enquanto não existir um
+# backend com controle de acesso, esta é a fronteira.
+# --------------------------------------------------------------------------
+*.xlsx
+*.xls
+*.csv
+*.docx
+*.pdf
+~$*
+dados-referencia-csv/
+dashboard/public/data/
+
+# Documentos internos: orçamento/proposta comercial, análise de viabilidade e
+# relatórios de entrega ao cliente — trazem preços e números da parceria.
+analise-*.md
+relatorio-*.md
+
+# Configuração local de ferramentas
+.claude/
+
+# --------------------------------------------------------------------------
+# Angular / Node
+# --------------------------------------------------------------------------
+node_modules/
+dist/
+.angular/
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/

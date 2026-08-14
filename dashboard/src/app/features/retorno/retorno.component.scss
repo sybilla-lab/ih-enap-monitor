@@ -1,0 +1,322 @@
+.retorno {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.estado-vazio {
+  padding: 24px;
+
+  h1 {
+    margin: 0 0 8px;
+    font: var(--mat-sys-headline-small);
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.destaque {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  gap: 32px;
+  padding: 28px 24px;
+  align-items: center;
+
+  @media (max-width: 899px) {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  &__rotulo {
+    margin: 0;
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__valor {
+    margin: 4px 0 2px;
+    font-family: var(--app-font-display);
+    font-size: clamp(44px, 5.6vw, 60px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__nota {
+    margin: 0;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// Régua do real: aporte e captação na mesma escala, lado a lado.
+.regua {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  &__linha {
+    display: grid;
+    grid-template-columns: 132px 1fr auto;
+    align-items: center;
+    gap: 12px;
+
+    @media (max-width: 599px) {
+      grid-template-columns: 1fr auto;
+
+      .regua__trilho {
+        grid-column: 1 / -1;
+        order: 3;
+      }
+    }
+  }
+
+  &__rotulo {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__trilho {
+    display: block;
+  }
+
+  &__barra {
+    display: block;
+    height: 18px;
+    min-width: 3px;
+    border-radius: 0 4px 4px 0;
+
+    &--aporte {
+      background: var(--app-viz-neutral);
+    }
+
+    &--captado {
+      background: var(--app-viz-accent);
+    }
+  }
+
+  &__valor {
+    font: var(--mat-sys-body-medium);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}
+
+.bloco {
+  padding: 24px;
+
+  &__titulo {
+    margin: 0;
+    font: var(--mat-sys-title-large);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  &__subtitulo {
+    margin: 2px 0 20px;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.anos {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    display: grid;
+    grid-template-columns: 96px 1fr minmax(160px, auto);
+    align-items: center;
+    gap: 12px;
+    transition: opacity 160ms ease;
+
+    // Ano fora do recorte continua visível, só recua — o contexto da série
+    // inteira é parte da leitura.
+    &--dim {
+      opacity: 0.35;
+    }
+
+    @media (max-width: 699px) {
+      grid-template-columns: 96px 1fr;
+
+      .anos__grafico {
+        grid-column: 1 / -1;
+        order: 3;
+      }
+    }
+  }
+
+  &__ano {
+    font: var(--mat-sys-title-small);
+    font-variant-numeric: tabular-nums;
+  }
+
+  // Meta é o trilho; realizado é a barra cheia por cima, na mesma escala.
+  &__grafico {
+    position: relative;
+    height: 20px;
+  }
+
+  &__meta {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: 0 4px 4px 0;
+    background: color-mix(in srgb, var(--app-viz-neutral) 32%, transparent);
+  }
+
+  &__realizado {
+    position: absolute;
+    inset: 0 auto 0 0;
+    min-width: 3px;
+    border-radius: 0 4px 4px 0;
+    background: var(--app-viz-accent);
+  }
+
+  &__valores {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+
+    strong {
+      font: var(--mat-sys-body-medium);
+      font-weight: 600;
+    }
+
+    span {
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    @media (max-width: 699px) {
+      text-align: left;
+    }
+  }
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 11px;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+.aportes {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+
+  &__titulo {
+    margin: 0 0 8px;
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__lista {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+      font-variant-numeric: tabular-nums;
+      transition: opacity 160ms ease;
+    }
+
+    span {
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    strong {
+      font: var(--mat-sys-body-medium);
+      font-weight: 600;
+    }
+  }
+
+  // Aporte de ano fora do recorte: recua, não some.
+  &__item--dim {
+    opacity: 0.35;
+  }
+}
+
+// Matriz de pontos: cada ponto é um desafio do alcance projetado.
+.pontos {
+  display: grid;
+  grid-template-columns: repeat(25, 1fr);
+  gap: 5px;
+  max-width: 460px;
+
+  @media (max-width: 599px) {
+    grid-template-columns: repeat(20, 1fr);
+  }
+
+  &__ponto {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--app-viz-neutral) 30%, transparent);
+
+    &--contratado {
+      background: var(--app-viz-accent);
+    }
+  }
+
+  &__amostra {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    margin-right: 6px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--app-viz-neutral) 30%, transparent);
+
+    &--contratado {
+      background: var(--app-viz-accent);
+    }
+  }
+
+  &__legenda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 32px;
+    margin: 20px 0 0;
+
+    dt {
+      display: flex;
+      align-items: center;
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    dd {
+      margin: 2px 0 0 15px;
+      font: var(--mat-sys-body-medium);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+.fonte {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

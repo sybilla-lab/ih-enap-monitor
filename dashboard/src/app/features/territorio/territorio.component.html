@@ -1,0 +1,248 @@
+@if (!srv.carregado()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Carregando dados territoriais" />
+}
+@if (srv.carregado() && srv.erro()) {
+  <section class="app-card estado-vazio">
+    <h1>Não foi possível carregar</h1>
+    <p>{{ srv.erro() }}</p>
+  </section>
+}
+@if (srv.carregado() && !srv.erro() && srv.dados(); as t) {
+  <div class="territorio">
+    <header class="app-masthead">
+      <p class="app-masthead__eyebrow">Alcance · {{ recorte() }}</p>
+      <h1 class="app-masthead__titulo">Onde a parceria já chegou</h1>
+      <p class="app-masthead__lead">
+        Estados, municípios e organizações públicas engajadas — pelos registros de desafios,
+        ciclos de aceleração e agentes públicos.
+      </p>
+    </header>
+
+    @if (t.vazio) {
+      <section class="app-card estado-vazio">
+        <h2>Sem registros territoriais neste recorte</h2>
+        <p>
+          {{ recorte() }} não tem atividade territorial registrada. Ajuste o filtro no topo da
+          página para ver outro período ou linha de ação.
+        </p>
+      </section>
+    } @else {
+
+    <section class="kpis" aria-label="Indicadores territoriais">
+      @for (kpi of kpis(); track kpi.label) {
+        <app-stat-tile
+          [label]="kpi.label"
+          [value]="kpi.value"
+          [hint]="kpi.hint"
+          [icon]="kpi.icon"
+          [tone]="kpi.tone ?? 'default'"
+        />
+      }
+    </section>
+
+    <div class="grid">
+      <section class="app-card bloco bloco--mapa">
+        <h2 class="bloco__titulo">Alcance por estado</h2>
+        <p class="bloco__subtitulo">
+          Intensidade = frentes que alcançaram o estado (iniciativas e prefeituras com agentes).
+          Clique num estado para ver quais são.
+        </p>
+
+        <div class="foco" aria-live="polite">
+          @if (detalheUf(); as d) {
+            <span class="foco__uf">{{ d.sigla }}</span>
+            <span class="foco__nome">{{ d.nome }}</span>
+            <span class="foco__valor">
+              {{ d.alcance === 0 ? 'sem registro' : d.alcance + (d.alcance === 1 ? ' frente' : ' frentes') }}
+            </span>
+          } @else {
+            <span class="foco__dica">Clique num estado para abrir as frentes que chegaram lá →</span>
+          }
+        </div>
+
+        <app-brazil-tilemap
+          [alcancePorUf]="t.alcancePorUf"
+          [selecionada]="ufEmDestaque()"
+          [fixada]="ufFixada()"
+          [comOrg]="ufsComOrg()"
+          (selecionar)="ufHover.set($event)"
+          (fixar)="alternarUf($event)"
+        />
+      </section>
+
+      <section class="app-card bloco">
+        <h2 class="bloco__titulo">Organizações por agentes engajados</h2>
+        <p class="bloco__subtitulo">
+          Instituições públicas com mais agentes nos projetos. Clique numa delas para ver os
+          projetos em que atua.
+        </p>
+
+        @if (ufSemOrg(); as estado) {
+          <p class="aviso" aria-live="polite">
+            <mat-icon aria-hidden="true">info</mat-icon>
+            Nenhuma organização com agentes registrada em {{ estado }} — o alcance do estado vem
+            de iniciativas, não de agentes.
+          </p>
+        }
+
+        <ol class="ranking">
+          @for (org of t.rankingOrgsPorAgentes; track org.nome) {
+            <li>
+              <button
+                type="button"
+                class="ranking__item"
+                [class.ranking__item--apagado]="orgApagada(org)"
+                [class.ranking__item--foco]="orgEmFoco(org)"
+                [attr.aria-pressed]="orgEmFoco(org)"
+                (mouseenter)="focarOrg(org.uf)"
+                (mouseleave)="ufHover.set(null)"
+                (focus)="focarOrg(org.uf)"
+                (blur)="ufHover.set(null)"
+                (click)="alternarOrg(org.nome)"
+              >
+                <span class="ranking__nome" [title]="org.nome">
+                  {{ org.nome }}
+                  @if (org.uf) {
+                    <mat-icon class="ranking__pin" aria-hidden="true">place</mat-icon>
+                  }
+                </span>
+                <span class="ranking__barra" role="presentation">
+                  <span class="ranking__fill" [style.width.%]="(org.agentes / rankingMax()) * 100"></span>
+                </span>
+                <span class="ranking__valor">{{ org.agentes }}</span>
+              </button>
+            </li>
+          }
+        </ol>
+      </section>
+    </div>
+
+    <!-- Painel de detalhe: só abre por clique, e é o único lugar da página que
+         nomeia as iniciativas — o mapa e o ranking mostram quantidades. Flutua
+         preso à viewport (lateral no desktop, gaveta inferior no celular) para
+         não empurrar a página nem exigir scroll a cada estado clicado. -->
+    @if (painel(); as p) {
+      <div class="scrim" (click)="limparFoco()" aria-hidden="true"></div>
+      <section
+        #painelDetalhe
+        class="app-card detalhe"
+        role="dialog"
+        aria-modal="false"
+        [attr.aria-label]="'Detalhe de ' + p.titulo"
+        tabindex="-1"
+      >
+        <header class="detalhe__cabecalho">
+          @if (p.tipo === 'uf') {
+            <span class="detalhe__sigla">{{ p.sigla }}</span>
+          } @else {
+            <mat-icon class="detalhe__icone" aria-hidden="true">account_balance</mat-icon>
+          }
+          <h2 class="detalhe__titulo">{{ p.titulo }}</h2>
+          <button type="button" class="detalhe__fechar" (click)="limparFoco()" aria-label="Fechar detalhe">
+            <mat-icon aria-hidden="true">close</mat-icon>
+          </button>
+        </header>
+
+        @if (p.tipo === 'uf') {
+          <p class="detalhe__resumo">
+            {{ p.frentes }} {{ p.frentes === 1 ? 'frente alcançou' : 'frentes alcançaram' }}
+            o estado · {{ recorte() }}
+          </p>
+
+          @if (p.iniciativas.length) {
+            <h3 class="detalhe__subtitulo">Iniciativas</h3>
+            <ul class="iniciativas">
+              @for (i of p.iniciativas; track i.nome) {
+                <li class="iniciativas__item">
+                  <span class="iniciativas__nome">{{ i.nome }}</span>
+                  <span class="iniciativas__meta">
+                    {{ i.linha }} · {{ i.ano ?? 'data não informada' }}
+                  </span>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="detalhe__vazio">Nenhuma iniciativa registrada neste recorte.</p>
+          }
+
+          @if (p.organizacoes.length) {
+            <div class="detalhe__secao">
+              <h3 class="detalhe__subtitulo">Prefeituras com agentes públicos engajados</h3>
+              <ul class="detalhe__chips">
+                @for (o of p.organizacoes; track o.nome) {
+                  <li>
+                    <button type="button" class="chip" (click)="alternarOrg(o.nome)">
+                      {{ o.nome }} <strong>{{ o.agentes }}</strong>
+                    </button>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        } @else {
+          <p class="detalhe__resumo">
+            {{ p.agentes }} {{ p.agentes === 1 ? 'agente público engajado' : 'agentes públicos engajados' }}
+            @if (p.local) { · {{ p.local }} }
+            · {{ recorte() }}
+          </p>
+
+          <div class="detalhe__secao">
+            <h3 class="detalhe__subtitulo">Projetos em que atua</h3>
+            <ul class="detalhe__chips">
+              @for (proj of p.projetos; track proj) {
+                <li><span class="chip chip--estatico">{{ proj }}</span></li>
+              }
+            </ul>
+          </div>
+
+          @if (p.engajamento) {
+            <div class="detalhe__secao">
+              <h3 class="detalhe__subtitulo">Engajamento registrado na Linha IV</h3>
+              <p class="detalhe__texto">{{ p.engajamento }}</p>
+            </div>
+          }
+        }
+      </section>
+    }
+
+    <div class="grid grid--secundaria">
+      <section class="app-card bloco">
+        <h2 class="bloco__titulo">Municípios com projeto</h2>
+        <p class="bloco__subtitulo">Prefeituras identificadas nos registros de atividades.</p>
+        <ul class="municipios">
+          @for (m of t.municipios; track m.cidade) {
+            <li class="municipios__chip">
+              <mat-icon aria-hidden="true">place</mat-icon>
+              {{ m.cidade }} <strong>{{ m.uf }}</strong>
+            </li>
+          }
+        </ul>
+      </section>
+
+      <section class="app-card bloco">
+        <h2 class="bloco__titulo">Organizações por nível federativo</h2>
+        <p class="bloco__subtitulo">Composição das {{ t.organizacoesPublicas }} organizações públicas engajadas.</p>
+        <ul class="niveis">
+          @for (n of niveis(); track n.nivel) {
+            <li class="niveis__item">
+              <span class="niveis__valor">{{ n.total }}</span>
+              <span class="niveis__rotulo">{{ n.nivel }}</span>
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
+
+    }
+
+    <p class="fonte">
+      Dados normalizados das abas de atividades, agentes e organizações da Planilha Oficial de
+      Indicadores. Mapa por estado; o detalhe por município depende de os registros informarem a
+      localidade — hoje disponível para {{ t.municipios.length }} prefeituras.
+      @if (t.semData > 0) {
+        <strong>{{ t.semData }} registros não trazem data na origem</strong> e por isso ficam
+        fora de um recorte por ano — aparecem apenas na visão acumulada.
+      }
+    </p>
+  </div>
+}
