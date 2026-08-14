@@ -3,6 +3,9 @@
 Dashboard de acompanhamento do Programa de Parceria Enap × Impact Hub Brasil (2024–2028):
 cumprimento das metas por linha de ação, retorno do investimento e alcance territorial.
 
+**Publicado em https://sybilla-lab.github.io/ih-enap-monitor/** — abre na tela de carga, porque o
+site não traz dado nenhum: quem abre é que fornece a planilha.
+
 > **Este repositório não contém dados.** Os indicadores da parceria são confidenciais e nunca
 > foram versionados aqui. O painel lê a planilha oficial no navegador de quem o abre — o arquivo
 > não é enviado a servidor nenhum e não fica no repositório. Enquanto não existir um backend com
@@ -63,6 +66,13 @@ dashboard/src/app/
 ```
 
 Angular 19 (standalone + signals), Angular Material M3 com paleta derivada da marca, Chart.js.
+
+## Publicação
+
+Todo push na `main` dispara o workflow `.github/workflows/deploy.yml`, que builda com
+`--base-href=/ih-enap-monitor/` e publica no GitHub Pages. O `index.html` também é servido como
+`404.html` para que links diretos e F5 em `/retorno` e `/territorio` funcionem — o Pages não
+conhece o roteador do Angular e devolveria 404 nessas rotas.
 
 ## Próximo passo
 
