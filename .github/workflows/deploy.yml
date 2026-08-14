@@ -1,0 +1,60 @@
+name: Publicar no GitHub Pages
+
+# O site publicado é só a aplicação: os indicadores continuam fora do
+# repositório e entram pela tela de carga, no navegador de quem abre o painel.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Uma publicação por vez; um push novo cancela a anterior ainda em andamento.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+
+      # O xlsx vem do CDN da SheetJS (a versão do npm está desatualizada).
+      - run: npm ci
+
+      - run: npm run build -- --base-href=/ih-enap-monitor/
+
+      # O Pages devolve 404 em rota profunda porque não conhece o roteador do
+      # Angular. Servir o próprio index como página de 404 faz link direto e F5
+      # em /retorno ou /territorio continuarem funcionando.
+      - run: cp dist/dashboard/browser/index.html dist/dashboard/browser/404.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dashboard/dist/dashboard/browser
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
