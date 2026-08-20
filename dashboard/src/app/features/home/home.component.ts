@@ -4,6 +4,7 @@ import { DataService } from '../../core/services/data.service';
 import { GlobalFilterService } from '../../core/services/global-filter.service';
 import { formatMoeda, formatQuantidade } from '../../core/util/numero.util';
 import { kpisDaParceria } from '../../core/util/kpis.util';
+import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
 
 /**
  * Home: o retrato da parceria em números, sem análise.
@@ -16,7 +17,7 @@ import { kpisDaParceria } from '../../core/util/kpis.util';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [MatProgressBarModule],
+  imports: [MatProgressBarModule, KpiCardComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

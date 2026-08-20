@@ -68,8 +68,11 @@
   }
 }
 
-.bloco {
-  padding: 24px;
+// Lista de indicadores: cada um é um card, não uma linha de planilha.
+.metas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 
   &__titulo {
     margin: 0;
@@ -79,10 +82,36 @@
   }
 
   &__subtitulo {
-    margin: 2px 0 18px;
-    max-width: 78ch;
+    margin: 2px 0 0;
+    max-width: 84ch;
     font: var(--mat-sys-body-small);
     color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__lista {
+    display: grid;
+    gap: 12px;
+
+    // Dois indicadores por fileira quando a tela permite: menos rolagem sem
+    // apertar a série de anos.
+    @media (min-width: 1240px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+}
+
+// Tabela crua, fechada por padrão — conferência, não leitura.
+.tabela-bruta {
+  padding: 14px 20px;
+
+  summary {
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface-variant);
+    cursor: pointer;
+  }
+
+  .tabela-rolagem {
+    margin-top: 16px;
   }
 }
 

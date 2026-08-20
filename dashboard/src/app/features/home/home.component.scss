@@ -1,7 +1,7 @@
 .home {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 18px;
 }
 
 .home-erro {
@@ -33,15 +33,15 @@
   }
 }
 
-// Dez indicadores na mesma grade de fios: colunas confortáveis para valores
-// longos em R$ sem quebrar o número no meio.
+// Grade dos dez indicadores: cinco colunas em tela larga fecham a leitura em
+// duas fileiras, sem scroll. Os cards financeiros se distinguem pelo fundo
+// tingido, não por ocuparem mais espaço — espalhar aumentaria a rolagem.
 .kpis {
-  grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(196px, 1fr));
+  gap: 12px;
 
-  &__valor {
-    font: var(--mat-sys-title-large);
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    font-variant-numeric: tabular-nums;
+  @media (min-width: 1180px) {
+    grid-template-columns: repeat(5, 1fr);
   }
 }

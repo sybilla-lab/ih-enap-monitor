@@ -102,6 +102,22 @@ body {
   }
 }
 
+// Link dentro de texto corrido: sublinhado discreto que firma no hover.
+.app-link {
+  color: var(--mat-sys-on-surface);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--app-viz-accent) 55%, transparent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 120ms ease, text-decoration-color 120ms ease;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--app-viz-accent);
+    text-decoration-color: var(--app-viz-accent);
+  }
+}
+
 // Todo número que o leitor compara na vertical usa figuras de largura fixa.
 .app-num {
   font-variant-numeric: tabular-nums;
@@ -151,6 +167,43 @@ body {
     max-width: 68ch;
     font: var(--mat-sys-body-large);
     color: var(--mat-sys-on-surface-variant);
+  }
+
+  // Variante editorial: título e texto lado a lado, ocupando a largura toda.
+  // Um texto longo empilhado embaixo do título deixava metade da tela vazia e
+  // empurrava os indicadores para fora da primeira dobra.
+  &--editorial {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 4px 56px;
+    align-items: start;
+
+    .app-masthead__eyebrow,
+    .app-masthead__titulo {
+      grid-column: 1;
+    }
+
+    .app-masthead__titulo {
+      max-width: 100%;
+      font-size: clamp(28px, 3vw, 38px);
+    }
+
+    .app-masthead__lead {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      max-width: none;
+      align-self: center;
+    }
+
+    @media (max-width: 899px) {
+      grid-template-columns: 1fr;
+      gap: 12px;
+
+      .app-masthead__lead {
+        grid-column: 1;
+        grid-row: auto;
+      }
+    }
   }
 }
 

@@ -14,6 +14,10 @@ import {
 import { cumprimento, valoresDoRecorte } from '../../core/util/agregacao.util';
 import { formatMoeda, formatPercentual, formatQuantidade } from '../../core/util/numero.util';
 import { RetornoBlocosComponent } from './components/retorno-blocos.component';
+import {
+  IndicadorApresentado,
+  IndicadorCardComponent,
+} from './components/indicador-card.component';
 
 /** Descrição de cada linha — o que a página promete além dos números. */
 const RESUMOS: Record<string, string> = {
@@ -27,28 +31,6 @@ const RESUMOS: Record<string, string> = {
     'Captação de recursos fora do orçamento da União, organizações públicas engajadas e o retorno financeiro da parceria.',
 };
 
-interface CelulaAno {
-  ano: number;
-  meta: string;
-  realizado: string;
-  pct: number | null;
-  pctLabel: string;
-  atingido: boolean;
-  emCurso: boolean;
-  vazio: boolean;
-}
-
-interface IndicadorDaLinha {
-  nome: string;
-  unidade: string;
-  totalMeta: string;
-  totalRealizado: string;
-  pct: number;
-  pctLabel: string;
-  atingido: boolean;
-  anos: CelulaAno[];
-}
-
 /**
  * Página de uma linha de ação, servida para as quatro rotas — a linha vem de
  * `data.linha` na rota. As quatro páginas são a mesma leitura com dados
@@ -61,7 +43,7 @@ interface IndicadorDaLinha {
 @Component({
   selector: 'app-linha',
   standalone: true,
-  imports: [MatProgressBarModule, RetornoBlocosComponent],
+  imports: [MatProgressBarModule, RetornoBlocosComponent, IndicadorCardComponent],
   templateUrl: './linha.component.html',
   styleUrl: './linha.component.scss',
 })
@@ -93,10 +75,18 @@ export class LinhaComponent {
     };
   });
 
-  readonly indicadores = computed<IndicadorDaLinha[]>(() =>
-    this.indicadoresDaLinha().map((ind) => {
+  readonly indicadores = computed<IndicadorApresentado[]>(() => {
+    const anoSelecionado = this.filtro.ano();
+    return this.indicadoresDaLinha().map((ind) => {
       const formatar = formatador(ind);
       const razao = ind.metaTotal > 0 ? ind.realizadoTotal / ind.metaTotal : null;
+      // Escala das colunas: o maior valor do indicador no período vale a altura
+      // cheia, para as barras de um mesmo indicador serem comparáveis entre si.
+      const maior = Math.max(
+        ...ind.anos.flatMap((a) => [a.meta, a.realizado]),
+        1,
+      );
+
       return {
         nome: ind.nome,
         unidade: rotuloUnidade(ind),
@@ -108,20 +98,23 @@ export class LinhaComponent {
         anos: ANOS_PARCERIA.map((ano) => {
           const v = valoresDoRecorte(ind, ano);
           const r = v.meta > 0 ? v.realizado / v.meta : null;
+          const vazio = v.meta === 0 && v.realizado === 0;
           return {
             ano,
             meta: v.meta > 0 ? formatar(v.meta) : '—',
-            realizado: v.meta > 0 || v.realizado > 0 ? formatar(v.realizado) : '—',
-            pct: r === null ? null : Math.min(r * 100, 100),
+            realizado: vazio ? '—' : formatar(v.realizado),
+            alturaMeta: (v.meta / maior) * 100,
+            alturaRealizado: (v.realizado / maior) * 100,
             pctLabel: r === null ? '—' : formatPercentual(Math.min(r * 100, 100)),
             atingido: r !== null && r >= 1,
             emCurso: ano === this.anoCorrente,
-            vazio: v.meta === 0 && v.realizado === 0,
+            vazio,
+            selecionado: anoSelecionado === ano,
           };
         }),
       };
-    }),
-  );
+    });
+  });
 
   /** A Linha IV carrega também a leitura financeira da parceria. */
   readonly mostrarRetorno = computed(() => this.linha().id === 'Linha IV');

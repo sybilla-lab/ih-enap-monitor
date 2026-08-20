@@ -24,12 +24,31 @@
       </div>
     </section>
 
-    <section class="app-card bloco">
-      <h2 class="bloco__titulo">Metas da linha</h2>
-      <p class="bloco__subtitulo">
-        Meta e realizado de cada indicador, no acumulado da parceria e ano a ano. A coluna do ano
-        selecionado no filtro aparece destacada.
+    <section class="metas">
+      <header class="metas__cabecalho">
+        <h2 class="metas__titulo">Metas da linha</h2>
+        <p class="metas__subtitulo">
+          Cada indicador com o acumulado contra a meta de 2028 e a série ano a ano — trilho claro
+          é a meta do ano, barra cheia é o realizado. O ano do filtro aparece destacado.
+        </p>
+      </header>
+
+      <div class="metas__lista">
+        @for (ind of indicadores(); track ind.nome) {
+          <app-indicador-card [dados]="ind" />
+        }
+      </div>
+
+      <p class="nota">
+        "—" indica ano sem meta pactuada para o indicador. O percentual acumulado é capado em 100%:
+        entregas acima da meta contam como meta cumprida, não como excedente.
       </p>
+    </section>
+
+    <!-- A grade continua disponível para quem precisa conferir número a número
+         contra a planilha, mas fechada por padrão: não é a leitura principal. -->
+    <details class="app-card tabela-bruta">
+      <summary>Ver os mesmos dados em tabela</summary>
 
       <div class="tabela-rolagem">
         <table class="tabela">
@@ -105,12 +124,7 @@
           </tbody>
         </table>
       </div>
-
-      <p class="nota">
-        "—" indica ano sem meta pactuada para o indicador. O percentual acumulado é capado em 100%:
-        entregas acima da meta contam como meta cumprida, não como excedente.
-      </p>
-    </section>
+    </details>
 
     @if (mostrarRetorno()) {
       <app-retorno-blocos />

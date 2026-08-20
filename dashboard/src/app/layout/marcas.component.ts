@@ -63,26 +63,25 @@ import { Component, signal } from '@angular/core';
         background: var(--mat-sys-outline-variant);
       }
 
+      // As duas marcas são coloridas (verde-petróleo da Enap, vermelho do
+      // Impact Hub). Nada de inverter ou tingir: cada uma aparece sobre uma
+      // placa clara, que some no tema claro e garante leitura no escuro.
       &__logo {
         display: block;
         width: auto;
         object-fit: contain;
-
-        // Logos costumam vir em versão escura; no tema escuro elas somem no
-        // fundo. O filtro inverte só a luminosidade, preservando a leitura.
-        :root[data-theme='dark'] & {
-          filter: brightness(0) invert(1);
-          opacity: 0.92;
-        }
+        padding: 5px 9px;
+        border-radius: 8px;
+        background: #ffffff;
       }
 
       // A Enap é a marca principal: maior e primeiro na leitura.
       &__logo--principal {
-        height: 36px;
+        height: 40px;
       }
 
       &__logo--apoio {
-        height: 24px;
+        height: 30px;
       }
 
       @media (max-width: 599px) {
@@ -93,11 +92,11 @@ import { Component, signal } from '@angular/core';
         }
 
         &__logo--principal {
-          height: 28px;
+          height: 32px;
         }
 
         &__logo--apoio {
-          height: 20px;
+          height: 24px;
         }
       }
     }

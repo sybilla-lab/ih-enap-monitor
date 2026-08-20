@@ -7,14 +7,21 @@
   </section>
 } @else {
   <div class="home">
-    <header class="app-masthead">
+    <header class="app-masthead app-masthead--editorial">
       <h1 class="app-masthead__titulo">Inovação aberta para o setor público brasileiro</h1>
       <p class="app-masthead__lead">
         Desde outubro de 2023, o Impact Hub Brasil e a Diretoria de Inovação da Escola Nacional de
         Administração Pública (GNova/Enap) somam forças em uma parceria de cinco anos (2023–2028)
         para executar, consolidar e escalar a Estratégia de Inovação Aberta da Enap. Formalizada
-        por meio de um Termo de Colaboração, a iniciativa nasce de um propósito comum: colocar a
-        inovação a serviço da gestão pública e dos cidadãos.
+        por meio de um
+        <a
+          class="app-link"
+          href="https://repositorio.enap.gov.br/handle/1/7112"
+          target="_blank"
+          rel="noopener noreferrer"
+          >Termo de Colaboração</a
+        >, a iniciativa nasce de um propósito comum: colocar a inovação a serviço da gestão
+        pública e dos cidadãos.
       </p>
     </header>
 
@@ -33,15 +40,11 @@
         Entregas acumuladas no recorte selecionado — {{ filtro.rotulo() }}.
       </p>
 
-      <dl class="app-ledger kpis">
+      <div class="kpis">
         @for (kpi of kpis(); track kpi.rotulo) {
-          <div class="app-ledger__item">
-            <dt class="app-ledger__rotulo">{{ kpi.rotulo }}</dt>
-            <dd class="app-ledger__valor kpis__valor">{{ kpi.valor }}</dd>
-            <dd class="app-ledger__nota">{{ kpi.nota }}</dd>
-          </div>
+          <app-kpi-card [kpi]="kpi" />
         }
-      </dl>
+      </div>
     </section>
   </div>
 }
