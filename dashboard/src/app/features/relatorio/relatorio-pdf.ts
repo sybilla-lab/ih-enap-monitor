@@ -15,12 +15,15 @@ import { GraficoAvanco } from './grafico-svg';
  * desenho da letra é o que muda.
  */
 
-const TINTA = '#17120f';
-const TINTA2 = '#574f4d';
-const FIO = '#d9d1cf';
-const ACENTO = '#a23b4a';
-const NEUTRO = '#9f8c8d';
-const TRILHO = '#e8e2e1';
+// Mesma família do painel: tons neutros da paleta gerada do Verde Enap e o
+// verde claro como cor de dado. O PDF nasce sempre em modo claro.
+const TINTA = '#191c1d';
+const TINTA2 = '#5c5f5f';
+const FIO = '#d8dadb';
+const ACENTO = '#00918e';
+const VERDE_ENAP = '#024248';
+const NEUTRO = '#8a9797';
+const TRILHO = '#e6e8e9';
 
 export interface ItemTabelaIndicador {
   linha: string;
@@ -205,7 +208,7 @@ export async function baixarRelatorio(m: ModeloRelatorio): Promise<void> {
       columns: [
         {
           width: 22,
-          canvas: [{ type: 'rect', x: 0, y: 0, w: 20, h: 20, r: 4, color: ACENTO }],
+          canvas: [{ type: 'rect', x: 0, y: 0, w: 20, h: 20, r: 4, color: VERDE_ENAP }],
         },
         { text: 'Enap × Impact Hub Brasil', bold: true, fontSize: 10, margin: [6, 5, 0, 0] },
       ],
