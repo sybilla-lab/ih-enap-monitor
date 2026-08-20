@@ -86,6 +86,17 @@ export interface ModeloRelatorio {
   notas: { titulo: string; texto: string }[];
 }
 
+/** Divide em fileiras de tamanho fixo, completando a última com vazios. */
+function emFileiras<T>(itens: T[], porFileira: number): (T | null)[][] {
+  const fileiras: (T | null)[][] = [];
+  for (let i = 0; i < itens.length; i += porFileira) {
+    const fileira: (T | null)[] = itens.slice(i, i + porFileira);
+    while (fileira.length < porFileira) fileira.push(null);
+    fileiras.push(fileira);
+  }
+  return fileiras;
+}
+
 /** Barra de proporção desenhada com vetor (sem imagem). */
 function barra(preenchimento: number, largura = 70, referencia?: number) {
   const altura = 5;
@@ -270,16 +281,24 @@ export async function baixarRelatorio(m: ModeloRelatorio): Promise<void> {
       },
       margin: [0, 28, 0, 24],
     },
-    {
-      columns: m.numerosChave.map((n) => ({
-        stack: [
-          { text: n.rotulo, fontSize: 8, color: TINTA2 },
-          { text: n.valor, fontSize: 12, bold: true, margin: [0, 3, 0, 2] },
-          { text: n.nota, fontSize: 7.5, color: TINTA2 },
-        ],
-      })),
-      columnGap: 14,
-    },
+    // Dez indicadores não cabem numa fileira só de A4: quebra em blocos de
+    // quatro, com as colunas vazias preenchidas para as larguras não dançarem
+    // entre as fileiras.
+    ...emFileiras(m.numerosChave, 4).map((fileira) => ({
+      columns: fileira.map((n) =>
+        n
+          ? {
+              stack: [
+                { text: n.rotulo, fontSize: 8, color: TINTA2 },
+                { text: n.valor, fontSize: 12, bold: true, margin: [0, 3, 0, 2] },
+                { text: n.nota, fontSize: 7.5, color: TINTA2 },
+              ],
+            }
+          : { text: '' },
+      ),
+      columnGap: 16,
+      margin: [0, 0, 0, 14],
+    })),
   );
 
   // ---------------------------------------------- 01 metas e cumprimento ----

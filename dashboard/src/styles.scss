@@ -110,19 +110,21 @@ body {
   }
 }
 
-// Link dentro de texto corrido: sublinhado discreto que firma no hover.
+// Link dentro de texto corrido: no verde da marca, para se distinguir do texto
+// à primeira vista, com o sublinhado firmando no hover.
 .app-link {
-  color: var(--mat-sys-on-surface);
+  color: var(--app-viz-accent);
+  font-weight: 500;
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--app-viz-accent) 55%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--app-viz-accent) 45%, transparent);
   text-underline-offset: 3px;
   text-decoration-thickness: 1px;
   transition: color 120ms ease, text-decoration-color 120ms ease;
 
   &:hover,
   &:focus-visible {
-    color: var(--app-viz-accent);
-    text-decoration-color: var(--app-viz-accent);
+    color: light-dark(#006369, #4ed8e8);
+    text-decoration-color: currentColor;
   }
 }
 

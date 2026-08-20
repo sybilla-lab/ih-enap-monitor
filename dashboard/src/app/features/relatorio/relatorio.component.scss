@@ -109,34 +109,11 @@
   padding-bottom: 32px;
   border-bottom: 2px solid var(--doc-ink);
 
-  &__marca {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 40px;
-  }
-
-  &__logo {
-    display: block;
-    width: auto;
-    object-fit: contain;
-    padding: 4px 8px;
-    border-radius: 7px;
-    background: #ffffff;
-
-    &--enap {
-      height: 34px;
-    }
-
-    &--ih {
-      height: 24px;
-    }
-  }
-
-  &__fio {
-    width: 1px;
-    height: 22px;
-    background: var(--doc-fio);
+  &__assinatura {
+    margin: 0 0 36px;
+    font: var(--mat-sys-label-large);
+    font-weight: 600;
+    letter-spacing: 0.2px;
   }
 
   &__eyebrow {
