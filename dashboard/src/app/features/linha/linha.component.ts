@@ -90,6 +90,7 @@ export class LinhaComponent {
       return {
         nome: ind.nome,
         unidade: rotuloUnidade(ind),
+        largo: ind.unidade === 'moeda',
         totalMeta: ind.metaTotal > 0 ? formatar(ind.metaTotal) : '—',
         totalRealizado: formatar(ind.realizadoTotal),
         pct: razao === null ? 0 : Math.min(razao * 100, 100),

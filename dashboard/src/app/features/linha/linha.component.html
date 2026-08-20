@@ -35,7 +35,7 @@
 
       <div class="metas__lista">
         @for (ind of indicadores(); track ind.nome) {
-          <app-indicador-card [dados]="ind" />
+          <app-indicador-card [dados]="ind" [class.metas__largo]="ind.largo" />
         }
       </div>
 

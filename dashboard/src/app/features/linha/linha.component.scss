@@ -98,6 +98,11 @@
       grid-template-columns: repeat(2, 1fr);
     }
   }
+
+  // Valores em R$ por extenso não cabem em meia fileira sem se sobrepor.
+  &__largo {
+    grid-column: 1 / -1;
+  }
 }
 
 // Tabela crua, fechada por padrão — conferência, não leitura.

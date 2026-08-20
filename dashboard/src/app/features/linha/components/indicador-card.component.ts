@@ -17,6 +17,8 @@ export interface AnoDoIndicador {
 export interface IndicadorApresentado {
   nome: string;
   unidade: string;
+  /** Indicador em R$: os rótulos são longos e pedem a fileira inteira. */
+  largo: boolean;
   totalMeta: string;
   totalRealizado: string;
   pct: number;
