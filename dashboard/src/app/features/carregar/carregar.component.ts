@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { DataService } from '../../core/services/data.service';
@@ -28,11 +28,10 @@ import { ThemeService } from '../../core/services/theme.service';
 
       <main class="painel">
         <header class="painel__marca">
-          <span class="painel__selo" aria-hidden="true">IH</span>
-          <span class="painel__nome">
-            <strong>Enap × Impact Hub Brasil</strong>
-            <small>Painel da Parceria · 2024–2028</small>
-          </span>
+          <img class="painel__logo painel__logo--enap" [src]="logoEnap()" alt="Enap" />
+          <span class="painel__fio" aria-hidden="true"></span>
+          <img class="painel__logo painel__logo--ih" [src]="logoIh()" alt="Impact Hub Brasil" />
+          <small class="painel__contexto">Painel da Parceria · 2023–2028</small>
         </header>
 
         <h1 class="painel__titulo">Carregue a planilha de indicadores</h1>
@@ -129,41 +128,40 @@ import { ThemeService } from '../../core/services/theme.service';
       border: 1px solid var(--mat-sys-outline-variant);
       border-radius: 20px;
 
+      // As marcas abrem a tela; a versão negativa entra no tema escuro, como o
+      // brandbook da Enap determina.
       &__marca {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 12px;
         margin-bottom: 28px;
       }
 
-      &__selo {
-        display: grid;
-        place-items: center;
-        width: 40px;
-        height: 40px;
-        flex: none;
-        border-radius: 10px;
-        background: var(--mat-sys-primary);
-        color: var(--mat-sys-on-primary);
-        font-size: 15px;
-        font-weight: 800;
-        letter-spacing: 0.5px;
+      &__logo {
+        display: block;
+        width: auto;
+        object-fit: contain;
+
+        &--enap {
+          height: 34px;
+        }
+
+        &--ih {
+          height: 26px;
+        }
       }
 
-      &__nome {
-        display: flex;
-        flex-direction: column;
-        line-height: 1.25;
+      &__fio {
+        width: 1px;
+        height: 22px;
+        background: var(--mat-sys-outline-variant);
+      }
 
-        strong {
-          font: var(--mat-sys-title-small);
-          font-weight: 700;
-        }
-
-        small {
-          font: var(--mat-sys-body-small);
-          color: var(--mat-sys-on-surface-variant);
-        }
+      &__contexto {
+        flex-basis: 100%;
+        font: var(--mat-sys-body-small);
+        color: var(--mat-sys-on-surface-variant);
       }
 
       &__titulo {
@@ -291,6 +289,14 @@ export class CarregarComponent {
   readonly theme = inject(ThemeService);
 
   readonly arrastando = signal(false);
+
+  readonly logoEnap = computed(() =>
+    this.theme.mode() === 'dark' ? 'logos/enap-negativa.png' : 'logos/enap.png',
+  );
+
+  readonly logoIh = computed(() =>
+    this.theme.mode() === 'dark' ? 'logos/impact-hub-negativa.png' : 'logos/impact-hub.png',
+  );
 
   aoEscolher(evento: Event): void {
     const input = evento.target as HTMLInputElement;
