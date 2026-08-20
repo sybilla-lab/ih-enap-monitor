@@ -5,11 +5,14 @@ export interface LinhaAcao {
   nome: string;
 }
 
+// Nomes conforme a nomenclatura oficial do cliente. Os ids continuam sendo o
+// texto que a planilha usa na coluna "Linha de Ação" — mudar isso quebraria o
+// vínculo com a fonte.
 export const LINHAS_ACAO: LinhaAcao[] = [
-  { id: 'Linha I', nome: 'Inovação Aberta e Desafios' },
-  { id: 'Linha II', nome: 'Aceleração' },
-  { id: 'Linha III', nome: 'Conhecimento e Comunidades' },
-  { id: 'Linha IV', nome: 'Sustentabilidade e Captação' },
+  { id: 'Linha I', nome: 'Projetos de inovação aberta' },
+  { id: 'Linha II', nome: 'Aceleração e Incubação' },
+  { id: 'Linha III', nome: 'Cultura, conhecimento e comunidades' },
+  { id: 'Linha IV', nome: 'Prospecção e Retorno da Parceria' },
 ];
 
 export const ANOS_PARCERIA = [2024, 2025, 2026, 2027, 2028] as const;
@@ -55,4 +58,27 @@ export interface ParceriaResumo {
   alavancagem: number; // R$ captados por R$ 1 investido
   aportes: AportePorAno[];
   escalaDesafios: EscalaDesafios | null;
+}
+
+/**
+ * Números de entrega que não estão na aba Metas — vêm das abas operacionais
+ * (atividades, premiação) e alimentam os KPIs da Home. Cada um guarda o total e
+ * a quebra por ano, para responder ao filtro.
+ */
+export interface ContagemPorAno {
+  total: number;
+  porAno: Record<number, number>;
+  /** Registros sem data na origem: entram no total, não no recorte por ano. */
+  semData: number;
+}
+
+export interface EntregasOperacionais {
+  /** Projetos distintos registrados nas abas de atividades das linhas I, II e III. */
+  projetos: ContagemPorAno;
+  /** Soluções enviadas aos desafios (coluna "SOLUÇÕES ENVIADAS" da Linha I). */
+  solucoes: ContagemPorAno;
+  /** Participantes inscritos nos desafios da Linha I. */
+  participantesDesafios: ContagemPorAno;
+  /** Premiação paga aos desafios, da aba LIV - Premiação (total geral por ano). */
+  premiacao: ContagemPorAno;
 }

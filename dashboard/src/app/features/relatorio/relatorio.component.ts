@@ -13,6 +13,7 @@ import {
   valoresDoRecorte,
 } from '../../core/util/agregacao.util';
 import { formatMoeda, formatPercentual, formatQuantidade } from '../../core/util/numero.util';
+import { kpisDaParceria } from '../../core/util/kpis.util';
 import { escalaComum, graficoAvanco, svgDoMapa, tilesDoMapa } from './grafico-svg';
 import { ModeloRelatorio, baixarRelatorio } from './relatorio-pdf';
 
@@ -51,16 +52,10 @@ export class RelatorioComponent {
 
   readonly recorte = computed(() => {
     const ano = this.filtro.ano();
-    const linha = this.filtro.linha();
-    const partes = [ano === null ? 'Acumulado da parceria (2024–2028)' : `Ano de ${ano}`];
-    if (linha) partes.push(`${linha} — ${LINHAS_ACAO.find((l) => l.id === linha)?.nome}`);
-    return partes.join(' · ');
+    return ano === null ? 'Acumulado da parceria (2024–2028)' : `Ano de ${ano}`;
   });
 
-  private indicadoresDoRecorte = computed(() => {
-    const linha = this.filtro.linha();
-    return this.dados.indicadores().filter((i) => linha === null || i.linha === linha);
-  });
+  private indicadoresDoRecorte = this.dados.indicadores;
 
   // ------------------------------------------------------------ panorama ----
 
@@ -69,46 +64,16 @@ export class RelatorioComponent {
     return { pct: c.pct, valor: formatPercentual(c.pct), total: c.total, atingidos: c.atingidos };
   });
 
-  readonly numerosChave = computed(() => {
-    const indicadores = this.indicadoresDoRecorte();
-    const ano = this.filtro.ano();
-    const lista: { rotulo: string; valor: string; nota: string }[] = [];
-
-    const captacao = indicadores.find((i) => i.unidade === 'moeda');
-    if (captacao) {
-      const v = valoresDoRecorte(captacao, ano);
-      lista.push({
-        rotulo: 'Recursos captados',
-        valor: formatMoeda(v.realizado),
-        nota: `meta de ${formatMoeda(v.meta || captacao.metaTotal)}`,
-      });
-    }
-
-    const nps = indicadores.filter((i) => i.unidade === 'nps');
-    const medias = nps.map((i) => valoresDoRecorte(i, ano).realizado).filter((v) => v > 0);
-    if (medias.length) {
-      lista.push({
-        rotulo: 'NPS médio',
-        valor: formatQuantidade(Math.round((medias.reduce((s, v) => s + v, 0) / medias.length) * 10) / 10),
-        nota: `média de ${medias.length} indicadores · meta 80`,
-      });
-    }
-
-    const t = this.territorio();
-    if (t) {
-      lista.push({
-        rotulo: 'Agentes públicos engajados',
-        valor: formatQuantidade(t.totalAgentes),
-        nota: `em ${t.rankingOrgsPorAgentes.length} organizações`,
-      });
-      lista.push({
-        rotulo: 'Estados alcançados',
-        valor: `${t.ufsAlcancadas} de ${t.totalUfs}`,
-        nota: `${t.organizacoesPublicas} organizações públicas engajadas`,
-      });
-    }
-    return lista;
-  });
+  /** Os mesmos dez KPIs da Home — uma lista só para as duas saídas. */
+  readonly numerosChave = computed(() =>
+    kpisDaParceria(
+      this.dados.indicadores(),
+      this.dados.entregas(),
+      this.dados.parceria(),
+      this.filtro.ano(),
+      this.filtro.rotulo(),
+    ),
+  );
 
   /** Tabela completa de indicadores — o miolo verificável do relatório. */
   readonly tabelaIndicadores = computed(() => {
@@ -138,21 +103,19 @@ export class RelatorioComponent {
   readonly progressoPorLinha = computed(() => {
     const indicadores = this.dados.indicadores();
     const ano = this.filtro.ano();
-    const linhaFiltrada = this.filtro.linha();
-    return LINHAS_ACAO.filter((l) => linhaFiltrada === null || l.id === linhaFiltrada)
-      .map((linha) => {
-        const c = cumprimento(
-          indicadores.filter((i) => i.linha === linha.id),
-          ano,
-        );
-        return {
-          rotulo: `${linha.id} · ${linha.nome}`,
-          detalhe: `${c.total} indicadores · ${c.atingidos} atingidos`,
-          valor: formatPercentual(c.pct),
-          preenchimento: c.pct,
-        };
-      })
-      .filter((l) => l.detalhe !== '0 indicadores · 0 atingidos');
+    return LINHAS_ACAO.map((linha) => {
+      const c = cumprimento(
+        indicadores.filter((i) => i.linha === linha.id),
+        ano,
+      );
+      return {
+        rotulo: `${linha.id} · ${linha.nome}`,
+        detalhe: `${c.total} indicadores · ${c.atingidos} atingidos`,
+        valor: formatPercentual(c.pct),
+        preenchimento: c.pct,
+        total: c.total,
+      };
+    }).filter((l) => l.total > 0);
   });
 
   // -------------------------------------------------------------- avanço ----

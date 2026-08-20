@@ -20,6 +20,12 @@ dashboard/public/data/
 analise-*.md
 relatorio-*.md
 
+# Marcas dos parceiros: material de identidade visual da Enap e do Impact Hub,
+# fornecido pelo cliente. O painel exibe se os arquivos estiverem na pasta e se
+# vira sem eles — publicar logo de terceiro num repositório aberto é decisão de
+# quem detém a marca, não nossa.
+dashboard/public/logos/
+
 # Configuração local de ferramentas
 .claude/
 

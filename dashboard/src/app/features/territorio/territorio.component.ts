@@ -63,13 +63,7 @@ export class TerritorioComponent {
   }
 
   /** Recorte em vigor por extenso — o cabeçalho diz o que está sendo somado. */
-  readonly recorte = computed(() => {
-    const ano = this.filtro.ano();
-    const linha = this.filtro.linha();
-    const partes = [ano === null ? 'acumulado da parceria' : String(ano)];
-    if (linha) partes.push(linha);
-    return partes.join(' · ');
-  });
+  readonly recorte = this.filtro.rotulo;
 
   /** UFs que têm ao menos uma organização no ranking (para o mapa realçar de volta). */
   readonly ufsComOrg = computed(() => {

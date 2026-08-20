@@ -22,6 +22,7 @@ export class DataService {
   readonly indicadores = computed(() => this.dados()?.indicadores ?? []);
   readonly parceria = computed(() => this.dados()?.parceria ?? null);
   readonly territorio = computed(() => this.dados()?.territorio ?? null);
+  readonly entregas = computed(() => this.dados()?.entregas ?? null);
 
   /** Há dados para exibir? É o que decide entre a tela de carga e o painel. */
   readonly pronto = computed(() => this.dados() !== null);

@@ -1,4 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { MatIconModule } from '@angular/material/icon';
 import { DataService } from '../../../core/services/data.service';
 import { GlobalFilterService } from '../../../core/services/global-filter.service';
 import { LINHAS_ACAO, LinhaAcaoId } from '../../../core/models/indicadores.model';
@@ -8,30 +10,37 @@ import { formatPercentual } from '../../../core/util/numero.util';
 interface LinhaProgresso {
   id: LinhaAcaoId;
   nome: string;
+  rota: string;
   pct: number;
   pctLabel: string;
   total: number;
   atingidos: number;
 }
 
+const ROTAS: Record<LinhaAcaoId, string> = {
+  'Linha I': '/linha-i',
+  'Linha II': '/linha-ii',
+  'Linha III': '/linha-iii',
+  'Linha IV': '/linha-iv',
+};
+
 /**
- * Progresso das metas por linha de ação (docx: barras horizontais com
- * realizado × restante). Clicar numa linha aplica o filtro global — as demais
- * ficam esmaecidas (forma de ênfase), em vez de sumirem.
+ * Progresso das metas por linha de ação (docx: barras horizontais com realizado
+ * × restante). Cada linha é um link para a página da própria linha — antes o
+ * clique aplicava um filtro global, que deixou de existir quando as linhas
+ * viraram páginas.
  */
 @Component({
   selector: 'app-metas-linha',
   standalone: true,
+  imports: [RouterLink, MatIconModule],
   template: `
     <div class="linhas">
       @for (linha of linhas(); track linha.id) {
-        <button
-          type="button"
+        <a
           class="linha"
-          [class.linha--dim]="filtro.linha() !== null && filtro.linha() !== linha.id"
-          [attr.aria-pressed]="filtro.linha() === linha.id"
-          (click)="filtro.alternarLinha(linha.id)"
-          [title]="'Média de cumprimento dos ' + linha.total + ' indicadores da ' + linha.id + '. Clique para filtrar o painel.'"
+          [routerLink]="linha.rota"
+          [title]="'Abrir a página da ' + linha.id + ' — ' + linha.nome"
         >
           <span class="linha__cabecalho">
             <span class="linha__nome">
@@ -46,8 +55,9 @@ interface LinhaProgresso {
           <span class="linha__detalhe">
             {{ linha.total }} indicadores · {{ linha.atingidos }}
             {{ linha.atingidos === 1 ? 'atingido' : 'atingidos' }}
+            <mat-icon aria-hidden="true">arrow_forward</mat-icon>
           </span>
-        </button>
+        </a>
       }
     </div>
   `,
@@ -63,22 +73,19 @@ interface LinhaProgresso {
       flex-direction: column;
       gap: 6px;
       padding: 12px;
-      border: none;
       border-radius: 12px;
-      background: transparent;
-      font: inherit;
-      text-align: left;
+      text-decoration: none;
       color: inherit;
-      cursor: pointer;
-      transition: background 120ms ease, opacity 160ms ease;
+      transition: background 120ms ease;
 
       &:hover,
       &:focus-visible {
         background: color-mix(in srgb, var(--mat-sys-primary) 6%, transparent);
-      }
 
-      &--dim {
-        opacity: 0.4;
+        .linha__detalhe mat-icon {
+          opacity: 1;
+          transform: translateX(2px);
+        }
       }
 
       &__cabecalho {
@@ -131,15 +138,26 @@ interface LinhaProgresso {
       }
 
       &__detalhe {
+        display: flex;
+        align-items: center;
+        gap: 4px;
         font: var(--mat-sys-body-small);
         color: var(--mat-sys-on-surface-variant);
+
+        mat-icon {
+          font-size: 15px;
+          width: 15px;
+          height: 15px;
+          opacity: 0;
+          transition: opacity 120ms ease, transform 120ms ease;
+        }
       }
     }
   `,
 })
 export class MetasLinhaComponent {
   private dados = inject(DataService);
-  readonly filtro = inject(GlobalFilterService);
+  private filtro = inject(GlobalFilterService);
 
   readonly linhas = computed<LinhaProgresso[]>(() => {
     const indicadores = this.dados.indicadores();
@@ -152,6 +170,7 @@ export class MetasLinhaComponent {
       return {
         id: linha.id,
         nome: linha.nome,
+        rota: ROTAS[linha.id],
         pct: c.pct,
         pctLabel: formatPercentual(c.pct),
         total: c.total,

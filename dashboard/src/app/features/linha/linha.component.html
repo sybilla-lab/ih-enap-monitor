@@ -1,0 +1,119 @@
+@if (!dados.carregado()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Carregando dados da linha" />
+} @else if (dados.erro()) {
+  <section class="app-card erro">
+    <h1>Não foi possível carregar os dados</h1>
+    <p>{{ dados.erro() }}</p>
+  </section>
+} @else {
+  <div class="pagina">
+    <header class="app-masthead">
+      <p class="app-masthead__eyebrow">{{ linha().id }} · {{ filtro.rotulo() }}</p>
+      <h1 class="app-masthead__titulo">{{ linha().nome }}</h1>
+      <p class="app-masthead__lead">{{ resumo() }}</p>
+    </header>
+
+    <section class="app-card resumo" aria-label="Cumprimento da linha">
+      <div class="resumo__hero">
+        <p class="resumo__rotulo">Cumprimento médio da linha</p>
+        <p class="resumo__valor">{{ panorama().valor }}</p>
+        <span class="resumo__meter" role="presentation">
+          <span class="resumo__meter-fill" [style.width.%]="panorama().pct"></span>
+        </span>
+        <p class="resumo__nota">{{ panorama().nota }}</p>
+      </div>
+    </section>
+
+    <section class="app-card bloco">
+      <h2 class="bloco__titulo">Metas da linha</h2>
+      <p class="bloco__subtitulo">
+        Meta e realizado de cada indicador, no acumulado da parceria e ano a ano. A coluna do ano
+        selecionado no filtro aparece destacada.
+      </p>
+
+      <div class="tabela-rolagem">
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th scope="col" class="tabela__indicador" rowspan="2">Indicador</th>
+              <th scope="col" colspan="3" class="tabela__grupo tabela__grupo--total">
+                Acumulado 2024–2028
+              </th>
+              @for (ano of anos; track ano) {
+                <th
+                  scope="col"
+                  colspan="2"
+                  class="tabela__grupo"
+                  [class.tabela__grupo--ativo]="filtro.ano() === ano"
+                >
+                  {{ ano }}
+                </th>
+              }
+            </tr>
+            <tr>
+              <th scope="col" class="tabela__num">Meta</th>
+              <th scope="col" class="tabela__num">Realizado</th>
+              <th scope="col" class="tabela__num">%</th>
+              @for (ano of anos; track ano) {
+                <th scope="col" class="tabela__num" [class.tabela__col--ativa]="filtro.ano() === ano">
+                  Meta
+                </th>
+                <th scope="col" class="tabela__num" [class.tabela__col--ativa]="filtro.ano() === ano">
+                  Realizado
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (ind of indicadores(); track ind.nome) {
+              <tr>
+                <th scope="row" class="tabela__indicador">
+                  <span class="tabela__nome">{{ ind.nome }}</span>
+                  <span class="tabela__unidade">{{ ind.unidade }}</span>
+                </th>
+                <td class="tabela__num tabela__total">{{ ind.totalMeta }}</td>
+                <td class="tabela__num tabela__total">{{ ind.totalRealizado }}</td>
+                <td class="tabela__num tabela__total">
+                  <span class="tabela__pct" [class.tabela__pct--ok]="ind.atingido">
+                    {{ ind.pctLabel }}
+                  </span>
+                  <span class="barra" role="presentation">
+                    <span class="barra__fill" [style.width.%]="ind.pct"></span>
+                  </span>
+                </td>
+                @for (a of ind.anos; track a.ano) {
+                  <td
+                    class="tabela__num"
+                    [class.tabela__col--ativa]="filtro.ano() === a.ano"
+                    [class.tabela__vazio]="a.vazio"
+                  >
+                    {{ a.meta }}
+                  </td>
+                  <td
+                    class="tabela__num"
+                    [class.tabela__col--ativa]="filtro.ano() === a.ano"
+                    [class.tabela__vazio]="a.vazio"
+                  >
+                    <span [class.tabela__pct--ok]="a.atingido">{{ a.realizado }}</span>
+                    @if (a.emCurso && !a.vazio) {
+                      <span class="tag">em curso</span>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <p class="nota">
+        "—" indica ano sem meta pactuada para o indicador. O percentual acumulado é capado em 100%:
+        entregas acima da meta contam como meta cumprida, não como excedente.
+      </p>
+    </section>
+
+    @if (mostrarRetorno()) {
+      <app-retorno-blocos />
+    }
+  </div>
+}

@@ -201,15 +201,10 @@ export class AvancoChartComponent {
 
   readonly formatar = formatPercentual;
 
-  private indicadoresDoRecorte = computed(() => {
-    const linha = this.filtro.linha();
-    return this.dados.indicadores().filter((i) => linha === null || i.linha === linha);
-  });
-
-  readonly pontos = computed(() => avancoRumoAMetaFinal(this.indicadoresDoRecorte()));
+  readonly pontos = computed(() => avancoRumoAMetaFinal(this.dados.indicadores()));
 
   readonly totalCumulativos = computed(
-    () => this.indicadoresDoRecorte().filter(ehCumulativo).length,
+    () => this.dados.indicadores().filter(ehCumulativo).length,
   );
 
   readonly anoParcial = computed(() => this.pontos().find((p) => p.parcial)?.ano ?? null);

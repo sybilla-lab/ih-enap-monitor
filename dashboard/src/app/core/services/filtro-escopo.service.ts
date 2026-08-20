@@ -3,7 +3,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
 
-export type DimensaoFiltro = 'ano' | 'linha';
+/**
+ * Só resta o recorte por ano. A linha de ação foi promovida a página (uma para
+ * cada linha), então filtrar por linha deixou de fazer sentido: a página já é
+ * o recorte.
+ */
+export type DimensaoFiltro = 'ano';
 
 /**
  * Escopo do filtro flutuante: quais recortes a página aberta sabe aplicar.

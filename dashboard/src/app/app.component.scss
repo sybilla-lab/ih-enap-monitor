@@ -58,6 +58,12 @@
     padding-inline: 8px;
   }
 
+  // Nome da linha em duas alturas: rótulo curto e o tema da linha embaixo.
+  &__nav-desc {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
   &__nav-footer {
     padding: 16px;
     font: var(--mat-sys-body-small);

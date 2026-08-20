@@ -1,0 +1,216 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.erro {
+  padding: 24px;
+
+  h1 {
+    margin: 0 0 8px;
+    font: var(--mat-sys-headline-small);
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.resumo {
+  padding: 24px;
+
+  &__hero {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-width: 420px;
+  }
+
+  &__rotulo {
+    margin: 0;
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__valor {
+    margin: 0;
+    font-family: var(--app-font-display);
+    font-size: clamp(40px, 5vw, 54px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__meter {
+    display: block;
+    height: 6px;
+    margin-top: 4px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--app-viz-accent) 14%, transparent);
+    overflow: hidden;
+  }
+
+  &__meter-fill {
+    display: block;
+    height: 100%;
+    min-width: 4px;
+    border-radius: 3px;
+    background: var(--app-viz-accent);
+  }
+
+  &__nota {
+    margin: 0;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.bloco {
+  padding: 24px;
+
+  &__titulo {
+    margin: 0;
+    font: var(--mat-sys-title-large);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  &__subtitulo {
+    margin: 2px 0 18px;
+    max-width: 78ch;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// A série de cinco anos não cabe em tela estreita: a tabela rola dentro do
+// card em vez de espremer as colunas ou estourar a página.
+.tabela-rolagem {
+  overflow-x: auto;
+  margin-inline: -4px;
+  padding-inline: 4px;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--mat-sys-body-small);
+  font-variant-numeric: tabular-nums;
+
+  th,
+  td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    vertical-align: top;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--mat-sys-surface);
+    font-weight: 600;
+    color: var(--mat-sys-on-surface-variant);
+    white-space: nowrap;
+  }
+
+  &__grupo {
+    text-align: center !important;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+    &--total {
+      color: var(--mat-sys-on-surface);
+    }
+
+    // Ano selecionado no filtro: destacado em todas as suas colunas.
+    &--ativo {
+      color: var(--app-viz-accent);
+      background: color-mix(in srgb, var(--app-viz-accent) 8%, var(--mat-sys-surface));
+    }
+  }
+
+  &__col--ativa {
+    background: color-mix(in srgb, var(--app-viz-accent) 6%, transparent);
+  }
+
+  &__indicador {
+    min-width: 260px;
+    max-width: 380px;
+    font-weight: 400;
+    white-space: normal;
+  }
+
+  &__nome {
+    display: block;
+    font: var(--mat-sys-body-medium);
+    color: var(--mat-sys-on-surface);
+  }
+
+  &__unidade {
+    display: block;
+    margin-top: 2px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__num {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  &__total {
+    background: color-mix(in srgb, var(--mat-sys-on-surface) 3%, transparent);
+    font-weight: 600;
+  }
+
+  &__vazio {
+    color: color-mix(in srgb, var(--mat-sys-on-surface-variant) 60%, transparent);
+  }
+
+  &__pct {
+    display: block;
+
+    &--ok {
+      font-weight: 700;
+      color: var(--app-viz-accent);
+    }
+  }
+}
+
+.barra {
+  display: block;
+  height: 4px;
+  margin-top: 4px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--app-viz-accent) 14%, transparent);
+  overflow: hidden;
+
+  &__fill {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--app-viz-accent);
+  }
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  margin-left: 4px;
+  border-radius: 999px;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 10px;
+  vertical-align: middle;
+}
+
+.nota {
+  margin: 14px 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

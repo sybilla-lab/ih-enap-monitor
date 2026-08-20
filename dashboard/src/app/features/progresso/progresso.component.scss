@@ -1,0 +1,105 @@
+.progresso {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.erro {
+  padding: 24px;
+
+  h1 {
+    margin: 0 0 8px;
+    font: var(--mat-sys-headline-small);
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// Número-herói à esquerda, quebra por linha à direita — a mesma dupla que
+// abria o painel antes, agora numa página só sobre isso.
+.destaque {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) 1fr;
+  overflow: hidden;
+
+  @media (max-width: 899px) {
+    grid-template-columns: 1fr;
+  }
+
+  &__hero {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px;
+    border-right: 1px solid var(--mat-sys-outline-variant);
+
+    @media (max-width: 899px) {
+      border-right: none;
+      border-bottom: 1px solid var(--mat-sys-outline-variant);
+    }
+  }
+
+  &__linhas {
+    padding: 24px;
+  }
+
+  &__rotulo {
+    margin: 0;
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__valor {
+    margin: 0;
+    font-family: var(--app-font-display);
+    font-size: clamp(48px, 6vw, 64px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__meter {
+    display: block;
+    height: 6px;
+    margin-top: 4px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--app-viz-accent) 14%, transparent);
+    overflow: hidden;
+  }
+
+  &__meter-fill {
+    display: block;
+    height: 100%;
+    min-width: 4px;
+    border-radius: 3px;
+    background: var(--app-viz-accent);
+  }
+
+  &__nota {
+    margin: 0;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.bloco {
+  padding: 24px;
+
+  &__titulo {
+    margin: 0;
+    font: var(--mat-sys-title-large);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  &__subtitulo {
+    margin: 2px 0 16px;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}

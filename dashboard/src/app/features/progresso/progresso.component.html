@@ -1,0 +1,41 @@
+@if (!dados.carregado()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Carregando dados do painel" />
+} @else if (dados.erro()) {
+  <section class="app-card erro">
+    <h1>Não foi possível carregar os dados</h1>
+    <p>{{ dados.erro() }}</p>
+  </section>
+} @else {
+  <div class="progresso">
+    <header class="app-masthead">
+      <p class="app-masthead__eyebrow">{{ filtro.rotulo() }}</p>
+      <h1 class="app-masthead__titulo">Progresso das metas</h1>
+      <p class="app-masthead__lead">
+        Quanto de cada meta pactuada já foi cumprido, por linha de ação e no conjunto da parceria.
+      </p>
+    </header>
+
+    <section class="destaque app-card" aria-label="Cumprimento das metas">
+      <div class="destaque__hero">
+        <p class="destaque__rotulo">Cumprimento médio das metas</p>
+        <p class="destaque__valor">{{ destaque().valor }}</p>
+        <span class="destaque__meter" role="presentation">
+          <span class="destaque__meter-fill" [style.width.%]="destaque().pct"></span>
+        </span>
+        <p class="destaque__nota">{{ destaque().nota }}</p>
+      </div>
+
+      <div class="destaque__linhas">
+        <h2 class="bloco__titulo">Progresso por linha de ação</h2>
+        <p class="bloco__subtitulo">Média dos indicadores de cada linha no recorte.</p>
+        <app-metas-linha />
+      </div>
+    </section>
+
+    <section class="app-card bloco">
+      <h2 class="bloco__titulo">Avanço rumo a 2028</h2>
+      <p class="bloco__subtitulo">Quanto da meta final já foi entregue, contra o cronograma.</p>
+      <app-avanco-chart />
+    </section>
+  </div>
+}

@@ -29,10 +29,8 @@ export class TerritorioService {
     const t = this.origem.territorio();
     if (!t) return null;
     const ano = this.filtro.ano();
-    const linha = this.filtro.linha();
 
-    const noRecorte = <T extends { linha: string; ano: number | null }>(r: T) =>
-      (linha === null || r.linha === linha) && (ano === null || r.ano === ano);
+    const noRecorte = <T extends { ano: number | null }>(r: T) => ano === null || r.ano === ano;
 
     const alcance = t.alcance.filter(noRecorte);
     const agentes = t.agentes.filter(noRecorte);
@@ -47,7 +45,7 @@ export class TerritorioService {
       organizacoesPorNivel: porNivel(organizacoes),
       rankingOrgsPorAgentes: rankingDe(agentes),
       totalAgentes: agentes.length,
-      semData: ano === null ? 0 : semData(t, linha),
+      semData: ano === null ? 0 : semData(t),
       vazio: !alcance.length && !agentes.length && !organizacoes.length,
       registros: { alcance, agentes, organizacoes },
     };
@@ -100,13 +98,12 @@ function porNivel(organizacoes: RegistroOrganizacao[]): Record<string, number> {
   return mapa;
 }
 
-/** Registros da linha em foco que ficam de fora por não terem data na fonte. */
-function semData(t: TerritorioBruto, linha: string | null): number {
-  const daLinha = <T extends { linha: string; ano: number | null }>(r: T) =>
-    (linha === null || r.linha === linha) && r.ano === null;
+/** Registros que ficam de fora de um recorte por ano por não terem data. */
+function semData(t: TerritorioBruto): number {
+  const semAno = <T extends { ano: number | null }>(r: T) => r.ano === null;
   return (
-    t.alcance.filter(daLinha).length +
-    t.agentes.filter(daLinha).length +
-    t.organizacoes.filter(daLinha).length
+    t.alcance.filter(semAno).length +
+    t.agentes.filter(semAno).length +
+    t.organizacoes.filter(semAno).length
   );
 }

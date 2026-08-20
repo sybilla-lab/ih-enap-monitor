@@ -21,6 +21,7 @@ import { FiltroEscopoService } from './core/services/filtro-escopo.service';
 import { DataService } from './core/services/data.service';
 import { FilterDockComponent } from './shared/components/filter-dock/filter-dock.component';
 import { CarregarComponent } from './features/carregar/carregar.component';
+import { MarcasComponent } from './layout/marcas.component';
 
 @Component({
   selector: 'app-root',
@@ -36,6 +37,7 @@ import { CarregarComponent } from './features/carregar/carregar.component';
     MatTooltipModule,
     FilterDockComponent,
     CarregarComponent,
+    MarcasComponent,
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss',

@@ -1,19 +1,16 @@
-@if (!dados.carregado()) {
-  <mat-progress-bar mode="indeterminate" aria-label="Carregando dados de retorno" />
-} @else if (dados.erro() || !parceria()) {
+@if (!parceria()) {
   <section class="app-card estado-vazio">
-    <h1>Não foi possível carregar o retorno</h1>
-    <p>{{ dados.erro() ?? 'A aba Parceria da planilha não trouxe aporte e captação.' }}</p>
+    <h2>Retorno da parceria indisponível</h2>
+    <p>A aba Parceria da planilha não trouxe aporte e captação.</p>
   </section>
 } @else {
   <div class="retorno">
-    <header class="app-masthead">
-      <p class="app-masthead__eyebrow">Linha IV · Sustentabilidade e captação</p>
-      <h1 class="app-masthead__titulo">O retorno de cada real investido</h1>
-      <p class="app-masthead__lead">
+    <header class="titulo-secao">
+      <h2>O retorno de cada real investido</h2>
+      <p>
         A Enap aportou recursos próprios para viabilizar o programa. O que voltou — captado de
-        fontes públicas, privadas e internacionais, fora do orçamento da União — está medido
-        aqui, ano a ano, na proporção em que aconteceu.
+        fontes públicas, privadas e internacionais, fora do orçamento da União — está medido aqui,
+        ano a ano, na proporção em que aconteceu.
       </p>
     </header>
 

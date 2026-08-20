@@ -2,6 +2,8 @@ import type * as XLSX from 'xlsx';
 import {
   ANOS_PARCERIA,
   AportePorAno,
+  ContagemPorAno,
+  EntregasOperacionais,
   EscalaDesafios,
   Indicador,
   LinhaAcaoId,
@@ -36,6 +38,7 @@ export interface DadosPainel {
   indicadores: Indicador[];
   parceria: ParceriaResumo | null;
   territorio: TerritorioBruto;
+  entregas: EntregasOperacionais;
 }
 
 export class PlanilhaInvalidaError extends Error {
@@ -76,6 +79,7 @@ export async function lerPlanilha(arquivo: File): Promise<DadosPainel> {
     indicadores: lerMetas(linhas('Metas')),
     parceria: lerParceria(linhas('Parceria')),
     territorio: lerTerritorio(linhas),
+    entregas: lerEntregas(linhas),
   };
 }
 
@@ -173,6 +177,90 @@ function lerEscalaDesafios(rows: string[][]): EscalaDesafios | null {
   const projecao = parseNumero(valores[1]);
   if (!meta || !projecao) return null;
   return { meta, projecao, nota: (valores[2] ?? '').trim() };
+}
+
+// -------------------------------------------------- Entregas (KPIs Home) ----
+
+function contagemVazia(): ContagemPorAno {
+  return { total: 0, porAno: {}, semData: 0 };
+}
+
+function somar(c: ContagemPorAno, valor: number, ano: number | null): void {
+  if (!valor) return;
+  c.total += valor;
+  if (ano === null) c.semData += valor;
+  else c.porAno[ano] = (c.porAno[ano] ?? 0) + valor;
+}
+
+/**
+ * Números de entrega que a aba Metas não cobre.
+ *
+ * Todos saem das abas operacionais e por isso trazem também o ano de cada
+ * registro — sem isso o KPI não responderia ao filtro. Registros sem data
+ * entram no acumulado e ficam fora dos recortes anuais, sempre declarados.
+ */
+function lerEntregas(linhas: (nome: string) => string[][]): EntregasOperacionais {
+  const projetos = contagemVazia();
+  const solucoes = contagemVazia();
+  const participantes = contagemVazia();
+  const premiacao = contagemVazia();
+
+  /** Projetos distintos: a mesma iniciativa aparece em várias linhas de atividade. */
+  const contarProjetos = (aba: string, reNome: RegExp, reData: RegExp) => {
+    const rows = linhas(aba);
+    const hIdx = rows.findIndex((r) => r.some((c) => /LINHA DE A[ÇC]/i.test((c ?? '').trim())));
+    if (hIdx < 0) return;
+    const h = rows[hIdx];
+    const iNome = coluna(h, reNome);
+    const iDi = coluna(h, reData);
+    const iDf = iDi + 1; // DATA FINAL vem sempre logo depois de DATA INICIAL
+    if (iNome < 0) return;
+
+    const vistos = new Set<string>();
+    for (const row of rows.slice(hIdx + 1)) {
+      const nome = (row[iNome] ?? '').trim();
+      if (!nome || vistos.has(nome)) continue;
+      vistos.add(nome);
+      somar(projetos, 1, anoDasDatas(row[iDi] ?? '', row[iDf] ?? ''));
+    }
+  };
+  contarProjetos('Linha I Desafios', /NOME DA INICIATIVA/i, /DATA INICIAL/i);
+  contarProjetos('Linha II Aceleracao', /^PROJETO/i, /DATA INICIAL/i);
+  contarProjetos('Linha III - Comunidade e Cultur', /^PROJETO/i, /DATA INICIAL/i);
+
+  // Soluções e participantes vêm das colunas de resultado dos desafios (Linha I).
+  {
+    const rows = linhas('Linha I Desafios');
+    const hIdx = rows.findIndex((r) => r.some((c) => /LINHA DE A[ÇC]/i.test((c ?? '').trim())));
+    if (hIdx >= 0) {
+      const h = rows[hIdx];
+      const iSolucoes = coluna(h, /SOLU[ÇC][ÕO]ES ENVIADAS/i);
+      const iInscritos = coluna(h, /TOTAL DE PARTICIPANTES INSCRITOS/i);
+      const iDi = coluna(h, /DATA INICIAL/i);
+      for (const row of rows.slice(hIdx + 1)) {
+        const ano = anoDasDatas(row[iDi] ?? '', row[iDi + 1] ?? '');
+        if (iSolucoes >= 0) somar(solucoes, parseNumero(row[iSolucoes]), ano);
+        if (iInscritos >= 0) somar(participantes, parseNumero(row[iInscritos]), ano);
+      }
+    }
+  }
+
+  // Premiação: a aba LIV traz um resumo "Ano | Total Geral" à direita do
+  // detalhamento — é o número que o cliente acompanha, então é o usado aqui.
+  {
+    const rows = linhas('LIV - Premiação');
+    const hIdx = rows.findIndex((r) => r.some((c) => /^Total Geral$/i.test((c ?? '').trim())));
+    if (hIdx >= 0) {
+      const iTotal = coluna(rows[hIdx], /^Total Geral$/i);
+      const iAno = iTotal - 1;
+      for (const row of rows.slice(hIdx + 1)) {
+        const ano = (row[iAno] ?? '').trim();
+        if (/^20\d{2}$/.test(ano)) somar(premiacao, parseNumero(row[iTotal]), Number(ano));
+      }
+    }
+  }
+
+  return { projetos, solucoes, participantesDesafios: participantes, premiacao };
 }
 
 // --------------------------------------------------------- Territorial ----

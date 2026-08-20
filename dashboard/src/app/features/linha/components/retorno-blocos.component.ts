@@ -1,10 +1,9 @@
 import { Component, computed, inject } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { DataService } from '../../core/services/data.service';
-import { GlobalFilterService } from '../../core/services/global-filter.service';
-import { formatMoeda, formatPercentual, formatQuantidade } from '../../core/util/numero.util';
-import { SimuladorAlavancagemComponent } from './components/simulador-alavancagem.component';
+import { DataService } from '../../../core/services/data.service';
+import { GlobalFilterService } from '../../../core/services/global-filter.service';
+import { formatMoeda, formatPercentual, formatQuantidade } from '../../../core/util/numero.util';
+import { SimuladorAlavancagemComponent } from './simulador-alavancagem.component';
 
 /** Largura de `valor` numa escala em que o maior dos dois vale 100%. */
 function escala(valor: number, outro: number): number {
@@ -24,13 +23,16 @@ interface AnoCaptacao {
 }
 
 /**
- * Retorno da parceria (Linha IV): o que a Enap aportou, o que a parceria captou
- * fora do orçamento da União e quanto isso representa por real investido.
+ * Retorno da parceria: o que a Enap aportou, o que a parceria captou fora do
+ * orçamento da União e quanto isso representa por real investido.
  *
- * Responde ao filtro de ano (a rota declara `filtros: ['ano']`): sem recorte os
- * números são o acumulado da parceria; com um ano selecionado, são o aporte e a
- * captação daquele ano. Anos sem aporte registrado não têm alavancagem — a
- * página diz isso em vez de exibir um número inventado.
+ * Vive dentro da página da Linha IV — prospecção e retorno são a mesma leitura
+ * para o cliente, e separá-los em duas páginas obrigava a ir e voltar.
+ *
+ * Responde ao filtro de ano: sem recorte os números são o acumulado da
+ * parceria; com um ano selecionado, são o aporte e a captação daquele ano. Anos
+ * sem aporte registrado não têm alavancagem — a página diz isso em vez de
+ * exibir um número inventado.
  *
  * Tudo sai de dois lugares da planilha oficial: a aba Parceria (aportes anuais,
  * valor captado, ROI) e o indicador financeiro da aba Metas (meta e realizado de
@@ -38,13 +40,13 @@ interface AnoCaptacao {
  * projeção e alimentado só por alavancagem já observada.
  */
 @Component({
-  selector: 'app-retorno',
+  selector: 'app-retorno-blocos',
   standalone: true,
-  imports: [MatIconModule, MatProgressBarModule, SimuladorAlavancagemComponent],
-  templateUrl: './retorno.component.html',
-  styleUrl: './retorno.component.scss',
+  imports: [MatIconModule, SimuladorAlavancagemComponent],
+  templateUrl: './retorno-blocos.component.html',
+  styleUrl: './retorno-blocos.component.scss',
 })
-export class RetornoComponent {
+export class RetornoBlocosComponent {
   readonly dados = inject(DataService);
   readonly filtro = inject(GlobalFilterService);
 

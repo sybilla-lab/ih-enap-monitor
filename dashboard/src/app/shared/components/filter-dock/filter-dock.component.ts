@@ -70,26 +70,6 @@ import { DataService } from '../../../core/services/data.service';
               </div>
             }
 
-            @if (escopo.aceita('linha')) {
-              <div class="grupo" role="group" aria-label="Filtrar por linha de ação">
-                <span class="grupo__rotulo">Linha</span>
-                <div class="chips">
-                  @for (linha of filtro.linhas; track linha.id) {
-                    <button
-                      type="button"
-                      class="chips__chip"
-                      [class.chips__chip--ativo]="filtro.linha() === linha.id"
-                      [attr.aria-pressed]="filtro.linha() === linha.id"
-                      [title]="linha.id + ' — ' + linha.nome"
-                      (click)="filtro.alternarLinha(linha.id)"
-                    >
-                      {{ linha.id }}
-                    </button>
-                  }
-                </div>
-              </div>
-            }
-
             @if (filtro.ativo()) {
               <button type="button" class="dock__limpar" (click)="filtro.limpar()">
                 <mat-icon aria-hidden="true">close</mat-icon>
@@ -347,14 +327,7 @@ export class FilterDockComponent {
 
   /** Recorte em vigor, escrito por extenso — é o que o dock recolhido mostra. */
   readonly resumo = computed(() => {
-    const partes: string[] = [];
-    if (this.escopo.aceita('ano')) {
-      const ano = this.filtro.ano();
-      partes.push(ano === null ? 'Acumulado' : String(ano));
-    }
-    if (this.escopo.aceita('linha')) {
-      partes.push(this.filtro.linha() ?? 'Todas as linhas');
-    }
-    return partes.join(' · ') || 'Filtros';
+    const ano = this.filtro.ano();
+    return ano === null ? 'Acumulado' : String(ano);
   });
 }

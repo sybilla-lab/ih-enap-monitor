@@ -29,11 +29,14 @@
           >
             <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
             <span matListItemTitle>{{ item.label }}</span>
+            @if (item.descricao) {
+              <span matListItemLine class="shell__nav-desc">{{ item.descricao }}</span>
+            }
           </a>
         }
       </mat-nav-list>
 
-      <div class="shell__nav-footer">Programa de Parceria · 2024–2028</div>
+      <div class="shell__nav-footer">Programa de Parceria · 2023–2028</div>
     </mat-sidenav>
 
     <mat-sidenav-content class="shell__content">
@@ -70,6 +73,8 @@
         [class.shell__main--dock]="escopo.visivel()"
         [class.shell__main--dock-min]="escopo.minimizado()"
       >
+        <!-- Assinatura das duas casas: no shell, aparece em toda página. -->
+        <app-marcas />
         <router-outlet />
       </main>
 

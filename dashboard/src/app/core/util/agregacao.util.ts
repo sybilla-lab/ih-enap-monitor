@@ -1,4 +1,19 @@
-import { ANOS_PARCERIA, Indicador } from '../models/indicadores.model';
+import { ANOS_PARCERIA, ContagemPorAno, Indicador } from '../models/indicadores.model';
+
+/**
+ * Valor de uma contagem operacional no recorte: o total quando não há ano
+ * selecionado, ou só o daquele ano. `semData` acompanha o número porque os
+ * registros sem data ficam de fora de qualquer recorte anual — a página precisa
+ * poder dizer isso em vez de exibir um total que não fecha.
+ */
+export function contagemDoRecorte(
+  c: ContagemPorAno | undefined | null,
+  ano: number | null,
+): { valor: number; semData: number } {
+  if (!c) return { valor: 0, semData: 0 };
+  if (ano === null) return { valor: c.total, semData: 0 };
+  return { valor: c.porAno[ano] ?? 0, semData: c.semData };
+}
 
 /**
  * Os indicadores misturam unidades (quantidade, %, NPS, R$), então nenhuma
