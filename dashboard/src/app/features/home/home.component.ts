@@ -1,10 +1,11 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { DataService } from '../../core/services/data.service';
 import { GlobalFilterService } from '../../core/services/global-filter.service';
 import { formatMoeda, formatQuantidade } from '../../core/util/numero.util';
-import { kpisDaParceria } from '../../core/util/kpis.util';
+import { Kpi, kpisDaParceria } from '../../core/util/kpis.util';
 import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.component';
+import { KpiDetalheComponent } from '../../shared/components/kpi-card/kpi-detalhe.component';
 
 /**
  * Home: o retrato da parceria em números, sem análise.
@@ -17,13 +18,16 @@ import { KpiCardComponent } from '../../shared/components/kpi-card/kpi-card.comp
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [MatProgressBarModule, KpiCardComponent],
+  imports: [MatProgressBarModule, KpiCardComponent, KpiDetalheComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
 export class HomeComponent {
   readonly dados = inject(DataService);
   readonly filtro = inject(GlobalFilterService);
+
+  /** Indicador aberto no detalhe; null = janela fechada. */
+  readonly detalhe = signal<Kpi | null>(null);
 
   readonly fatos = computed(() => {
     const financeiro = this.dados.indicadores().find((i) => i.unidade === 'moeda');

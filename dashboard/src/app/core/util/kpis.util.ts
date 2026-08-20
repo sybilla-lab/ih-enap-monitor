@@ -9,16 +9,41 @@ import { Recorte, contagemDoRecorte, valoresDoRecorte } from './agregacao.util';
 import { retornoDoRecorte } from './retorno.util';
 import { formatMoeda, formatPercentual, formatQuantidade } from './numero.util';
 
+export interface PontoSerie {
+  ano: number;
+  valor: number;
+  /** Meta pactuada para o ano, quando o indicador tem uma. */
+  meta?: number;
+  rotulo: string;
+  rotuloMeta?: string;
+}
+
+/**
+ * O que o detalhe do KPI abre: de onde o número vem, como é obtido e, quando
+ * ele é a soma ou a média de outros, quais são esses outros.
+ *
+ * Existe para o leitor conseguir auditar o painel sem abrir a planilha — foi o
+ * pedido de "clareza e transparência".
+ */
+export interface KpiDetalhe {
+  calculo: string;
+  fonte: string;
+  composicao?: { rotulo: string; valor: string; nota?: string }[];
+  /** Rótulo do que a composição soma/mediana ("Somados" / "Média de"). */
+  composicaoTitulo?: string;
+}
+
 export interface Kpi {
   rotulo: string;
   valor: string;
   nota: string;
   /** Progresso contra a meta do recorte, quando o indicador tem meta. */
   meta?: { pct: number; rotulo: string; atingido: boolean };
-  /** Série anual do realizado — vira o gráfico miúdo no card. */
-  serie?: { ano: number; valor: number }[];
+  /** Série anual — gráfico miúdo no card e gráfico cheio no detalhe. */
+  serie?: PontoSerie[];
   /** Card em destaque na grade (o que a leitura procura primeiro). */
   destaque?: boolean;
+  detalhe: KpiDetalhe;
 }
 
 /**
@@ -47,7 +72,12 @@ export function kpisDaParceria(
     rotulo: 'Projetos executados',
     valor: formatQuantidade(projetos.valor),
     nota: comSemData('inclui os em execução', projetos.semData),
-    serie: serieDaContagem(entregas?.projetos),
+    serie: serieDaContagem(entregas?.projetos, formatQuantidade),
+    detalhe: {
+      calculo:
+        'Contagem de iniciativas distintas registradas nas abas de atividades. Uma iniciativa com várias atividades (oficinas, encontros, etapas) conta uma vez só. O ano vem da data inicial ou final do registro.',
+      fonte: 'Abas "Linha I Desafios", "Linha II Aceleracao" e "Linha III - Comunidade e Cultura"',
+    },
   });
 
   const agentes = indicadores.find((i) => /agentes públicos/i.test(i.nome));
@@ -58,7 +88,12 @@ export function kpisDaParceria(
       valor: formatQuantidade(v.realizado),
       nota: `meta de ${formatQuantidade(v.meta)} · ${rotuloRecorte}`,
       meta: progresso(v.realizado, v.meta),
-      serie: serieDoIndicador(agentes),
+      serie: serieDoIndicador(agentes, formatQuantidade),
+      detalhe: {
+        calculo:
+          'Realizado do indicador da Linha I no recorte, comparado à meta pactuada para o mesmo período. Sem recorte, usa o total acumulado (YTD) e a meta total da parceria.',
+        fonte: `Aba "Metas", indicador "${agentes.nome.trim()}"`,
+      },
     });
   }
 
@@ -70,7 +105,12 @@ export function kpisDaParceria(
       valor: formatQuantidade(v.realizado),
       nota: `meta de ${formatQuantidade(v.meta)} · ${rotuloRecorte}`,
       meta: progresso(v.realizado, v.meta),
-      serie: serieDoIndicador(organizacoes),
+      serie: serieDoIndicador(organizacoes, formatQuantidade),
+      detalhe: {
+        calculo:
+          'Realizado do indicador da Linha IV no recorte, comparado à meta do mesmo período. São organizações públicas engajadas em projetos na modalidade customizada.',
+        fonte: `Aba "Metas", indicador "${organizacoes.nome.trim()}"`,
+      },
     });
   }
 
@@ -90,13 +130,37 @@ export function kpisDaParceria(
       valor: formatQuantidade(desafios.realizado),
       nota: `customizados, autosserviço e de grande impacto · meta de ${formatQuantidade(desafios.meta)}`,
       meta: progresso(desafios.realizado, desafios.meta),
-      serie: ANOS_PARCERIA.map((a) => ({
-        ano: a,
-        valor: indicadoresDeDesafio.reduce(
+      serie: ANOS_PARCERIA.map((a) => {
+        const valor = indicadoresDeDesafio.reduce(
           (s, ind) => s + (ind.anos.find((x) => x.ano === a)?.realizado ?? 0),
           0,
-        ),
-      })),
+        );
+        const meta = indicadoresDeDesafio.reduce(
+          (s, ind) => s + (ind.anos.find((x) => x.ano === a)?.meta ?? 0),
+          0,
+        );
+        return {
+          ano: a,
+          valor,
+          meta,
+          rotulo: formatQuantidade(valor),
+          rotuloMeta: formatQuantidade(meta),
+        };
+      }),
+      detalhe: {
+        calculo:
+          'Soma dos indicadores de desafios da aba Metas no recorte. São três modalidades distintas, contadas juntas porque a pergunta do cliente é "quantos desafios a parceria já realizou".',
+        fonte: 'Aba "Metas", Linha I',
+        composicaoTitulo: 'Somados neste número',
+        composicao: indicadoresDeDesafio.map((ind) => {
+          const v = valoresDoRecorte(ind, ano);
+          return {
+            rotulo: ind.nome.trim(),
+            valor: formatQuantidade(v.realizado),
+            nota: v.meta > 0 ? `meta de ${formatQuantidade(v.meta)}` : 'sem meta no recorte',
+          };
+        }),
+      },
     });
   }
 
@@ -105,7 +169,12 @@ export function kpisDaParceria(
     rotulo: 'Soluções geradas',
     valor: formatQuantidade(solucoes.valor),
     nota: comSemData('soluções enviadas aos desafios', solucoes.semData),
-    serie: serieDaContagem(entregas?.solucoes),
+    serie: serieDaContagem(entregas?.solucoes, formatQuantidade),
+    detalhe: {
+      calculo:
+        'Soma da coluna "Soluções enviadas" dos desafios da Linha I. Conta o que as equipes submeteram aos desafios — não é o mesmo que o Banco de Soluções, que reúne o ecossistema todo e contém duplicatas declaradas na própria planilha.',
+      fonte: 'Aba "Linha I Desafios", coluna "SOLUÇÕES ENVIADAS"',
+    },
   });
 
   const participantes = contagemDoRecorte(entregas?.participantesDesafios, ano);
@@ -113,7 +182,12 @@ export function kpisDaParceria(
     rotulo: 'Participantes em desafios',
     valor: formatQuantidade(participantes.valor),
     nota: comSemData('inscritos nos desafios da Linha I', participantes.semData),
-    serie: serieDaContagem(entregas?.participantesDesafios),
+    serie: serieDaContagem(entregas?.participantesDesafios, formatQuantidade),
+    detalhe: {
+      calculo:
+        'Soma dos inscritos declarados em cada desafio da Linha I. Registros de atividade sem número de inscritos não entram na conta.',
+      fonte: 'Aba "Linha I Desafios", coluna "TOTAL DE PARTICIPANTES INSCRITOS"',
+    },
   });
 
   const indicadoresNps = indicadores.filter((i) => i.unidade === 'nps');
@@ -129,11 +203,29 @@ export function kpisDaParceria(
         const doAno = indicadoresNps
           .map((i) => i.anos.find((x) => x.ano === a)?.realizado ?? 0)
           .filter((v) => v > 0);
+        const valor = doAno.length ? doAno.reduce((s, v) => s + v, 0) / doAno.length : 0;
         return {
           ano: a,
-          valor: doAno.length ? doAno.reduce((s, v) => s + v, 0) / doAno.length : 0,
+          valor,
+          meta: 80,
+          rotulo: valor ? formatQuantidade(Math.round(valor * 10) / 10) : '—',
+          rotuloMeta: '80',
         };
       }),
+      detalhe: {
+        calculo:
+          'Média simples dos indicadores de NPS que têm resultado no recorte. NPS não se soma nem se acumula: com mais de um ano selecionado, cada indicador entra pela média dos seus anos.',
+        fonte: 'Aba "Metas", indicadores de Net Promoter Score das Linhas I, II e III',
+        composicaoTitulo: 'Média destes indicadores',
+        composicao: indicadoresNps.map((ind) => {
+          const v = valoresDoRecorte(ind, ano);
+          return {
+            rotulo: ind.nome.trim(),
+            valor: v.realizado > 0 ? formatQuantidade(Math.round(v.realizado * 10) / 10) : '—',
+            nota: v.realizado > 0 ? `${ind.linha} · meta 80` : `${ind.linha} · sem apuração`,
+          };
+        }),
+      },
     });
   }
 
@@ -142,7 +234,12 @@ export function kpisDaParceria(
     rotulo: 'Valor em premiação',
     valor: formatMoeda(premiacao.valor),
     nota: `pago aos desafios · ${rotuloRecorte}`,
-    serie: serieDaContagem(entregas?.premiacao),
+    serie: serieDaContagem(entregas?.premiacao, formatMoeda),
+    detalhe: {
+      calculo:
+        'Total geral de premiação por ano, como a própria planilha consolida no resumo da aba — soma dos recursos da União e dos externos.',
+      fonte: 'Aba "LIV - Premiação", resumo "Ano · Total Geral"',
+    },
   });
 
   const captacao = indicadores.find((i) => i.unidade === 'moeda');
@@ -156,8 +253,13 @@ export function kpisDaParceria(
           ? `meta de ${formatMoeda(captacao.metaTotal)} até 2028`
           : `meta de ${formatMoeda(v.meta)} · ${rotuloRecorte}`,
       meta: progresso(v.realizado, ano === null ? captacao.metaTotal : v.meta),
-      serie: serieDoIndicador(captacao),
+      serie: serieDoIndicador(captacao, formatMoeda),
       destaque: true,
+      detalhe: {
+        calculo:
+          'Valor captado de fontes públicas, privadas e internacionais, fora do orçamento da União. Sem recorte, o painel usa o realizado acumulado (YTD) contra a meta total de 2028.',
+        fonte: 'Aba "Metas", indicador financeiro da Linha IV',
+      },
     });
   }
 
@@ -173,6 +275,17 @@ export function kpisDaParceria(
           ? `sem aporte registrado no recorte · ${rotuloRecorte}`
           : `${formatMoeda(retorno.alavancagem)} captados por R$ 1,00 aportado · ${rotuloRecorte}`,
       destaque: true,
+      detalhe: {
+        calculo:
+          'Retorno líquido dividido pelo aporte do recorte: (captado − aporte) ÷ aporte. Os textos narrativos da planilha não são usados como fonte — envelhecem sem ser atualizados.',
+        fonte: 'Aba "Parceria" (aportes anuais) e indicador financeiro da Linha IV (captação)',
+        composicaoTitulo: 'Como se chega ao número',
+        composicao: [
+          { rotulo: 'Aporte da Enap no recorte', valor: formatMoeda(retorno.aporte) },
+          { rotulo: 'Captado de fontes externas', valor: formatMoeda(retorno.captado) },
+          { rotulo: 'Retorno líquido', valor: formatMoeda(retorno.liquido), nota: 'captado − aporte' },
+        ],
+      },
     });
   }
 
@@ -189,16 +302,30 @@ function progresso(realizado: number, meta: number): Kpi['meta'] {
   };
 }
 
-function serieDaContagem(c: ContagemPorAno | undefined): { ano: number; valor: number }[] {
+function serieDaContagem(
+  c: ContagemPorAno | undefined,
+  formatar: (v: number) => string,
+): PontoSerie[] {
   if (!c) return [];
-  return ANOS_PARCERIA.map((ano) => ({ ano, valor: c.porAno[ano] ?? 0 }));
+  return ANOS_PARCERIA.map((ano) => {
+    const valor = c.porAno[ano] ?? 0;
+    return { ano, valor, rotulo: valor ? formatar(valor) : '—' };
+  });
 }
 
-function serieDoIndicador(ind: Indicador): { ano: number; valor: number }[] {
-  return ANOS_PARCERIA.map((ano) => ({
-    ano,
-    valor: ind.anos.find((a) => a.ano === ano)?.realizado ?? 0,
-  }));
+function serieDoIndicador(ind: Indicador, formatar: (v: number) => string): PontoSerie[] {
+  return ANOS_PARCERIA.map((ano) => {
+    const doAno = ind.anos.find((a) => a.ano === ano);
+    const valor = doAno?.realizado ?? 0;
+    const meta = doAno?.meta ?? 0;
+    return {
+      ano,
+      valor,
+      meta,
+      rotulo: valor || meta ? formatar(valor) : '—',
+      rotuloMeta: meta ? formatar(meta) : undefined,
+    };
+  });
 }
 
 /** Registros sem data ficam fora do recorte anual; a nota diz quantos são. */

@@ -42,9 +42,11 @@
 
       <div class="kpis">
         @for (kpi of kpis(); track kpi.rotulo) {
-          <app-kpi-card [kpi]="kpi" />
+          <app-kpi-card [kpi]="kpi" (abrir)="detalhe.set($event)" />
         }
       </div>
+
+      <app-kpi-detalhe [kpi]="detalhe()" (fechar)="detalhe.set(null)" />
     </section>
   </div>
 }

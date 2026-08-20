@@ -1,4 +1,5 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
+import { MatIconModule } from '@angular/material/icon';
 import { Kpi } from '../../../core/util/kpis.util';
 
 /**
@@ -14,8 +15,17 @@ import { Kpi } from '../../../core/util/kpis.util';
 @Component({
   selector: 'app-kpi-card',
   standalone: true,
+  imports: [MatIconModule],
   template: `
-    <article class="card" [class.card--destaque]="kpi().destaque">
+    <!-- O card inteiro é o gatilho do detalhe: é um botão, não uma div com
+         clique, para teclado e leitor de tela o tratarem como ação. -->
+    <button
+      type="button"
+      class="card"
+      [class.card--destaque]="kpi().destaque"
+      [attr.aria-label]="'Ver detalhes de ' + kpi().rotulo"
+      (click)="abrir.emit(kpi())"
+    >
       <header class="card__topo">
         <h3 class="card__rotulo">{{ kpi().rotulo }}</h3>
 
@@ -54,25 +64,38 @@ import { Kpi } from '../../../core/util/kpis.util';
         </div>
       }
 
-      <p class="card__nota">{{ kpi().nota }}</p>
-    </article>
+      <p class="card__nota">
+        {{ kpi().nota }}
+        <mat-icon class="card__lupa" aria-hidden="true">arrow_outward</mat-icon>
+      </p>
+    </button>
   `,
   styles: `
     .card {
       display: flex;
       flex-direction: column;
+      width: 100%;
       height: 100%;
       box-sizing: border-box;
       padding: 14px 16px 13px;
       border: 1px solid var(--mat-sys-outline-variant);
       border-radius: 16px;
       background: var(--mat-sys-surface);
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
       transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 
-      &:hover {
+      &:hover,
+      &:focus-visible {
         border-color: color-mix(in srgb, var(--app-viz-accent) 40%, var(--mat-sys-outline-variant));
         transform: translateY(-2px);
         box-shadow: 0 10px 24px light-dark(rgb(0 0 0 / 0.07), rgb(0 0 0 / 0.32));
+
+        .card__lupa {
+          opacity: 1;
+        }
       }
 
       // Destaque: fundo tingido do próprio vinho e faixa no topo. Só dois
@@ -125,10 +148,25 @@ import { Kpi } from '../../../core/util/kpis.util';
       }
 
       &__nota {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 8px;
         margin: auto 0 0;
         padding-top: 10px;
         font: var(--mat-sys-body-small);
         color: var(--mat-sys-on-surface-variant);
+      }
+
+      // Sinal discreto de que o card abre: só aparece no hover/foco.
+      &__lupa {
+        flex: none;
+        font-size: 15px;
+        width: 15px;
+        height: 15px;
+        opacity: 0;
+        color: var(--app-viz-accent);
+        transition: opacity 140ms ease;
       }
     }
 
@@ -208,6 +246,7 @@ import { Kpi } from '../../../core/util/kpis.util';
 })
 export class KpiCardComponent {
   readonly kpi = input.required<Kpi>();
+  readonly abrir = output<Kpi>();
 
   /** Perímetro do círculo r=18, base do desenho do anel. */
   readonly perimetro = 2 * Math.PI * 18;
