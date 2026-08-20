@@ -33,8 +33,12 @@ export class FiltroEscopoService {
   readonly visivel = computed(() => this.dimensoes().length > 0);
   readonly aceita = (dimensao: DimensaoFiltro) => this.dimensoes().includes(dimensao);
 
-  /** Estado do dock; recolhido devolve a área de leitura sem perder o recorte. */
-  readonly minimizado = signal(false);
+  /**
+   * Gaveta de filtro aberta? Nasce fechada e mora aqui, não na barra, porque o
+   * conteúdo da página precisa saber: a barra flutua sobre ele, e ao abrir a
+   * gaveta o texto do topo ficaria escondido atrás dela.
+   */
+  readonly aberto = signal(false);
 
   private dimensoesDaRota(): DimensaoFiltro[] {
     let rota = this.router.routerState.root;

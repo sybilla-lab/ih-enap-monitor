@@ -7,7 +7,9 @@
   <app-topbar />
 
   <div class="shell">
-    <main class="shell__main">
+    <!-- A barra flutua sobre o conteúdo; quando a gaveta do filtro abre, a
+         folga do topo cresce junto para nada ficar escondido atrás dela. -->
+    <main class="shell__main" [class.shell__main--filtro]="escopo.aberto() && escopo.visivel()">
       <router-outlet />
     </main>
 

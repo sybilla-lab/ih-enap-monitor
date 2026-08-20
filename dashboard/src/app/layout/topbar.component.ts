@@ -28,10 +28,13 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
     <header class="barra" [class.barra--aberta]="menuAberto()">
       <div class="barra__vidro">
         <div class="barra__linha">
+          <!-- Versão negativa no tema escuro: é o que o brandbook da Enap
+               determina para fundos escuros, em vez de tapar a marca com uma
+               placa branca. -->
           <a class="marca" routerLink="/home" aria-label="Painel da Parceria Enap × Impact Hub">
-            <img class="marca__enap" src="logos/enap.png" alt="Enap" />
+            <img class="marca__enap" [src]="logoEnap()" alt="Enap" />
             <span class="marca__fio" aria-hidden="true"></span>
-            <img class="marca__ih" src="logos/impact-hub.png" alt="Impact Hub Brasil" />
+            <img class="marca__ih" [src]="logoIh()" alt="Impact Hub Brasil" />
           </a>
 
           <nav class="nav" [attr.aria-label]="'Seções do painel'">
@@ -51,6 +54,21 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
           </nav>
 
           <div class="acoes">
+            @if (escopo.visivel()) {
+              <button
+                type="button"
+                class="gatilho"
+                [class.gatilho--aberto]="escopo.aberto()"
+                [attr.aria-expanded]="escopo.aberto()"
+                aria-controls="painel-filtro"
+                (click)="escopo.aberto.set(!escopo.aberto())"
+              >
+                <mat-icon aria-hidden="true">filter_list</mat-icon>
+                <span class="gatilho__valor">{{ filtro.rotuloCurto() }}</span>
+                <mat-icon class="gatilho__seta" aria-hidden="true">expand_more</mat-icon>
+              </button>
+            }
+
             @if (dados.origem(); as origem) {
               <button
                 type="button"
@@ -83,14 +101,14 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
           </div>
         </div>
 
-        @if (escopo.visivel()) {
-          <div class="filtro" role="group" aria-label="Filtrar por ano">
-            <span class="filtro__rotulo">
-              <mat-icon aria-hidden="true">filter_list</mat-icon>
-              Ano
-            </span>
+        <!-- Gaveta: o filtro não ocupa espaço até ser chamado. A transição é de
+             grid-template-rows, que anima altura sem precisar de valor fixo. -->
+        <div class="gaveta" [class.gaveta--aberta]="escopo.visivel() && escopo.aberto()">
+          <div class="gaveta__conteudo">
+            <div id="painel-filtro" class="filtro" role="group" aria-label="Filtrar por ano">
+              <span class="filtro__rotulo">Ano</span>
 
-            <button
+              <button
               type="button"
               class="filtro__opcao"
               [class.filtro__opcao--ativa]="!filtro.ativo()"
@@ -100,33 +118,26 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
               Acumulado
             </button>
 
-            @for (ano of filtro.anos; track ano) {
-              <button
-                type="button"
-                class="filtro__opcao"
-                [class.filtro__opcao--ativa]="filtro.selecionado(ano)"
-                [class.filtro__opcao--futura]="!anosComResultado().has(ano)"
-                [attr.aria-pressed]="filtro.selecionado(ano)"
-                [title]="
-                  anosComResultado().has(ano)
-                    ? 'Clique para ver só ' + ano + '. Ctrl+clique soma ao recorte.'
-                    : ano + ' ainda não tem resultados — mostra as metas do ano.'
-                "
-                (click)="escolher(ano, $event)"
-              >
-                {{ ano }}
-              </button>
-            }
-
-            <span class="filtro__dica">
-              @if (filtro.ativo()) {
-                {{ filtro.rotuloCurto() }} · Ctrl+clique soma anos
-              } @else {
-                Ctrl+clique soma anos
+              @for (ano of filtro.anos; track ano) {
+                <button
+                  type="button"
+                  class="filtro__opcao"
+                  [class.filtro__opcao--ativa]="filtro.selecionado(ano)"
+                  [class.filtro__opcao--futura]="!anosComResultado().has(ano)"
+                  [attr.aria-pressed]="filtro.selecionado(ano)"
+                  [title]="
+                    anosComResultado().has(ano)
+                      ? 'Clique para ver só ' + ano + '. Ctrl+clique soma ao recorte.'
+                      : ano + ' ainda não tem resultados — mostra as metas do ano.'
+                  "
+                  (click)="escolher(ano, $event)"
+                >
+                  {{ ano }}
+                </button>
               }
-            </span>
+            </div>
           </div>
-        }
+        </div>
       </div>
     </header>
   `,
@@ -174,14 +185,12 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
       flex: none;
       text-decoration: none;
 
+      // Sem placa branca: cada tema usa a versão correta da marca.
       &__enap,
       &__ih {
         display: block;
         width: auto;
         object-fit: contain;
-        padding: 4px 7px;
-        border-radius: 7px;
-        background: #ffffff;
       }
 
       // Enap é a marca principal; Impact Hub acompanha em escala menor.
@@ -280,29 +289,86 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
       }
     }
 
+    // Gatilho do filtro: mostra o recorte atual e abre a gaveta.
+    .gatilho {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px 6px 12px;
+      margin-right: 4px;
+      border: 1px solid color-mix(in srgb, var(--mat-sys-outline) 26%, transparent);
+      border-radius: 999px;
+      background: transparent;
+      color: var(--mat-sys-on-surface-variant);
+      font: var(--mat-sys-label-large);
+      cursor: pointer;
+      transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+
+      &__valor {
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+
+      &__seta {
+        transition: transform 200ms ease;
+      }
+
+      &:hover,
+      &:focus-visible {
+        border-color: var(--app-viz-accent);
+        color: var(--mat-sys-on-surface);
+      }
+
+      &--aberto {
+        background: color-mix(in srgb, var(--app-viz-accent) 14%, transparent);
+        border-color: transparent;
+        color: var(--mat-sys-on-surface);
+
+        .gatilho__seta {
+          transform: rotate(180deg);
+        }
+      }
+    }
+
+    // Animar grid-template-rows de 0fr a 1fr desliza sem altura fixa.
+    .gaveta {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 220ms ease;
+
+      &__conteudo {
+        overflow: hidden;
+      }
+
+      &--aberta {
+        grid-template-rows: 1fr;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+      }
+    }
+
     .filtro {
       display: flex;
       align-items: center;
       flex-wrap: wrap;
       gap: 6px;
-      padding: 8px 14px 10px;
+      padding: 10px 14px 12px;
       border-top: 1px solid color-mix(in srgb, var(--mat-sys-outline) 18%, transparent);
 
       &__rotulo {
-        display: flex;
-        align-items: center;
-        gap: 5px;
         margin-right: 4px;
         font: var(--mat-sys-label-medium);
         text-transform: uppercase;
         letter-spacing: 0.8px;
         color: var(--mat-sys-on-surface-variant);
-
-        mat-icon {
-          font-size: 16px;
-          width: 16px;
-          height: 16px;
-        }
       }
 
       &__opcao {
@@ -334,15 +400,6 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
         }
       }
 
-      &__dica {
-        margin-left: auto;
-        font: var(--mat-sys-body-small);
-        color: var(--mat-sys-on-surface-variant);
-
-        @media (max-width: 899px) {
-          display: none;
-        }
-      }
     }
 
     // No celular a barra vira uma linha só e o menu abre embaixo dela.
@@ -389,6 +446,14 @@ export class TopbarComponent {
   readonly escopo = inject(FiltroEscopoService);
 
   readonly menuAberto = signal(false);
+
+  readonly logoEnap = computed(() =>
+    this.theme.mode() === 'dark' ? 'logos/enap-negativa.png' : 'logos/enap.png',
+  );
+
+  readonly logoIh = computed(() =>
+    this.theme.mode() === 'dark' ? 'logos/impact-hub-negativa.png' : 'logos/impact-hub.png',
+  );
 
   /** Anos que já têm algum resultado — os demais aparecem esmaecidos. */
   readonly anosComResultado = computed(() => {
