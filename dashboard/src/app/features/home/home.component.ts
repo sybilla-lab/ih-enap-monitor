@@ -46,7 +46,7 @@ export class HomeComponent {
       this.dados.indicadores(),
       this.dados.entregas(),
       this.dados.parceria(),
-      this.filtro.ano(),
+      this.filtro.recorte(),
       this.filtro.rotulo(),
     ),
   );

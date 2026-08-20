@@ -226,7 +226,7 @@ export class AvancoChartComponent {
   readonly chartData = computed<ChartConfiguration<'line'>['data']>(() => {
     this.theme.mode(); // recalcula as cores quando o tema muda
     const pts = this.pontos();
-    const anoSelecionado = this.filtro.ano();
+    const anoSelecionado = this.filtro.recorte();
     const accent = corDoToken('--app-viz-accent');
     const contexto = corDoToken('--app-viz-neutral');
     const surface = corDoToken('--mat-sys-surface');
@@ -259,7 +259,9 @@ export class AvancoChartComponent {
           segment: {
             borderDash: (ctx) => (pts[ctx.p1DataIndex]?.parcial ? [2, 3] : undefined),
           },
-          pointRadius: pts.map((p) => (p.realizado === null ? 0 : p.ano === anoSelecionado ? 7 : 5)),
+          pointRadius: pts.map((p) =>
+            p.realizado === null ? 0 : (anoSelecionado?.includes(p.ano) ?? false) ? 7 : 5,
+          ),
           pointBackgroundColor: pts.map((p) => (p.parcial ? surface : accent)),
           pointBorderColor: pts.map((p) => (p.parcial ? accent : surface)),
           pointBorderWidth: 2,

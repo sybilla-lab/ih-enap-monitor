@@ -14,6 +14,7 @@ import {
 } from '../../core/util/agregacao.util';
 import { formatMoeda, formatPercentual, formatQuantidade } from '../../core/util/numero.util';
 import { kpisDaParceria } from '../../core/util/kpis.util';
+import { retornoDoRecorte } from '../../core/util/retorno.util';
 import { escalaComum, graficoAvanco, svgDoMapa, tilesDoMapa } from './grafico-svg';
 import { ModeloRelatorio, baixarRelatorio } from './relatorio-pdf';
 
@@ -51,8 +52,10 @@ export class RelatorioComponent {
   readonly emitidoEm = new Date();
 
   readonly recorte = computed(() => {
-    const ano = this.filtro.ano();
-    return ano === null ? 'Acumulado da parceria (2024–2028)' : `Ano de ${ano}`;
+    const anos = this.filtro.recorte();
+    return anos === null
+      ? 'Acumulado da parceria (2024–2028)'
+      : `${anos.length === 1 ? 'Ano de' : 'Anos de'} ${anos.join(', ')}`;
   });
 
   private indicadoresDoRecorte = this.dados.indicadores;
@@ -60,7 +63,7 @@ export class RelatorioComponent {
   // ------------------------------------------------------------ panorama ----
 
   readonly panorama = computed(() => {
-    const c = cumprimento(this.indicadoresDoRecorte(), this.filtro.ano());
+    const c = cumprimento(this.indicadoresDoRecorte(), this.filtro.recorte());
     return { pct: c.pct, valor: formatPercentual(c.pct), total: c.total, atingidos: c.atingidos };
   });
 
@@ -70,14 +73,14 @@ export class RelatorioComponent {
       this.dados.indicadores(),
       this.dados.entregas(),
       this.dados.parceria(),
-      this.filtro.ano(),
+      this.filtro.recorte(),
       this.filtro.rotulo(),
     ),
   );
 
   /** Tabela completa de indicadores — o miolo verificável do relatório. */
   readonly tabelaIndicadores = computed(() => {
-    const ano = this.filtro.ano();
+    const ano = this.filtro.recorte();
     return this.indicadoresDoRecorte().map((ind) => {
       const v = valoresDoRecorte(ind, ano);
       const pct = v.meta > 0 ? Math.min((v.realizado / v.meta) * 100, 999) : null;
@@ -102,7 +105,7 @@ export class RelatorioComponent {
 
   readonly progressoPorLinha = computed(() => {
     const indicadores = this.dados.indicadores();
-    const ano = this.filtro.ano();
+    const ano = this.filtro.recorte();
     return LINHAS_ACAO.map((linha) => {
       const c = cumprimento(
         indicadores.filter((i) => i.linha === linha.id),
@@ -145,22 +148,18 @@ export class RelatorioComponent {
   private captacao = computed(() => this.dados.indicadores().find((i) => i.unidade === 'moeda'));
 
   readonly retorno = computed(() => {
-    const p = this.parceria();
-    if (!p) return null;
-    const ano = this.filtro.ano();
-    const aporte = ano === null ? p.investimentoInicial : (p.aportes.find((a) => a.ano === ano)?.valor ?? 0);
-    const captado =
-      ano === null ? p.valorCaptado : (this.captacao()?.anos.find((a) => a.ano === ano)?.realizado ?? 0);
-    const maior = Math.max(aporte, captado);
+    const r = retornoDoRecorte(this.parceria(), this.captacao(), this.filtro.recorte());
+    if (!r) return null;
+    const maior = Math.max(r.aporte, r.captado);
     return {
-      aporte: formatMoeda(aporte),
-      captado: formatMoeda(captado),
-      liquido: formatMoeda(captado - aporte),
-      roi: aporte > 0 ? formatPercentual(((captado - aporte) / aporte) * 100) : '—',
-      alavancagem: aporte > 0 && captado > 0 ? formatMoeda(captado / aporte) : null,
-      larguraAporte: maior > 0 ? (aporte / maior) * 100 : 0,
-      larguraCaptado: maior > 0 ? (captado / maior) * 100 : 0,
-      anosDeAporte: p.aportes.filter((a) => a.valor > 0).length,
+      aporte: formatMoeda(r.aporte),
+      captado: formatMoeda(r.captado),
+      liquido: formatMoeda(r.liquido),
+      roi: r.roiPercentual === null ? '—' : formatPercentual(r.roiPercentual),
+      alavancagem: r.alavancagem === null ? null : formatMoeda(r.alavancagem),
+      larguraAporte: maior > 0 ? (r.aporte / maior) * 100 : 0,
+      larguraCaptado: maior > 0 ? (r.captado / maior) * 100 : 0,
+      anosDeAporte: r.anosDeAporte,
     };
   });
 

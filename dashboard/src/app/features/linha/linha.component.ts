@@ -67,7 +67,7 @@ export class LinhaComponent {
   );
 
   readonly panorama = computed(() => {
-    const c = cumprimento(this.indicadoresDaLinha(), this.filtro.ano());
+    const c = cumprimento(this.indicadoresDaLinha(), this.filtro.recorte());
     return {
       valor: formatPercentual(c.pct),
       pct: c.pct,
@@ -76,7 +76,7 @@ export class LinhaComponent {
   });
 
   readonly indicadores = computed<IndicadorApresentado[]>(() => {
-    const anoSelecionado = this.filtro.ano();
+    const anoSelecionado = this.filtro.recorte();
     return this.indicadoresDaLinha().map((ind) => {
       const formatar = formatador(ind);
       const razao = ind.metaTotal > 0 ? ind.realizadoTotal / ind.metaTotal : null;
@@ -97,7 +97,9 @@ export class LinhaComponent {
         pctLabel: razao === null ? '—' : formatPercentual(Math.min(razao * 100, 100)),
         atingido: razao !== null && razao >= 1,
         anos: ANOS_PARCERIA.map((ano) => {
-          const v = valoresDoRecorte(ind, ano);
+          // Cada coluna é sempre o ano dela, independente do filtro — o recorte
+          // muda o destaque, não o que a série mostra.
+          const v = valoresDoRecorte(ind, [ano]);
           const r = v.meta > 0 ? v.realizado / v.meta : null;
           const vazio = v.meta === 0 && v.realizado === 0;
           return {
@@ -110,7 +112,7 @@ export class LinhaComponent {
             atingido: r !== null && r >= 1,
             emCurso: ano === this.anoCorrente,
             vazio,
-            selecionado: anoSelecionado === ano,
+            selecionado: anoSelecionado?.includes(ano) ?? false,
           };
         }),
       };

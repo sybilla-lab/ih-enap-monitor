@@ -5,7 +5,8 @@ import {
   Indicador,
   ParceriaResumo,
 } from '../models/indicadores.model';
-import { contagemDoRecorte, valoresDoRecorte } from './agregacao.util';
+import { Recorte, contagemDoRecorte, valoresDoRecorte } from './agregacao.util';
+import { retornoDoRecorte } from './retorno.util';
 import { formatMoeda, formatPercentual, formatQuantidade } from './numero.util';
 
 export interface Kpi {
@@ -36,7 +37,7 @@ export function kpisDaParceria(
   indicadores: Indicador[],
   entregas: EntregasOperacionais | null,
   parceria: ParceriaResumo | null,
-  ano: number | null,
+  ano: Recorte,
   rotuloRecorte: string,
 ): Kpi[] {
   const lista: Kpi[] = [];
@@ -153,18 +154,24 @@ export function kpisDaParceria(
       nota:
         ano === null
           ? `meta de ${formatMoeda(captacao.metaTotal)} até 2028`
-          : `meta de ${formatMoeda(v.meta)} para ${ano}`,
+          : `meta de ${formatMoeda(v.meta)} · ${rotuloRecorte}`,
       meta: progresso(v.realizado, ano === null ? captacao.metaTotal : v.meta),
       serie: serieDoIndicador(captacao),
       destaque: true,
     });
   }
 
-  if (parceria) {
+  // ROI do recorte, não o acumulado fixo: com 2025 selecionado, o card responde
+  // pelo aporte e pela captação de 2025.
+  const retorno = retornoDoRecorte(parceria, captacao, ano);
+  if (retorno) {
     lista.push({
       rotulo: 'ROI da parceria',
-      valor: formatPercentual(parceria.roiPercentual),
-      nota: `${formatMoeda(parceria.alavancagem)} captados por R$ 1,00 aportado · acumulado`,
+      valor: retorno.roiPercentual === null ? '—' : formatPercentual(retorno.roiPercentual),
+      nota:
+        retorno.alavancagem === null
+          ? `sem aporte registrado no recorte · ${rotuloRecorte}`
+          : `${formatMoeda(retorno.alavancagem)} captados por R$ 1,00 aportado · ${rotuloRecorte}`,
       destaque: true,
     });
   }

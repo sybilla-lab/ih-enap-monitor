@@ -161,7 +161,7 @@ export class MetasLinhaComponent {
 
   readonly linhas = computed<LinhaProgresso[]>(() => {
     const indicadores = this.dados.indicadores();
-    const ano = this.filtro.ano();
+    const ano = this.filtro.recorte();
     return LINHAS_ACAO.map((linha) => {
       const c = cumprimento(
         indicadores.filter((i) => i.linha === linha.id),

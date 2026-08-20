@@ -1,18 +1,27 @@
 import { ANOS_PARCERIA, ContagemPorAno, Indicador } from '../models/indicadores.model';
 
 /**
+ * Recorte do painel: `null` é o acumulado da parceria; um array soma os anos
+ * escolhidos (o filtro aceita 2024+2025+2026 de uma vez).
+ */
+export type Recorte = number[] | null;
+
+/**
  * Valor de uma contagem operacional no recorte: o total quando não há ano
- * selecionado, ou só o daquele ano. `semData` acompanha o número porque os
- * registros sem data ficam de fora de qualquer recorte anual — a página precisa
- * poder dizer isso em vez de exibir um total que não fecha.
+ * selecionado, ou a soma dos anos escolhidos. `semData` acompanha o número
+ * porque os registros sem data ficam de fora de qualquer recorte anual — a
+ * página precisa poder dizer isso em vez de exibir um total que não fecha.
  */
 export function contagemDoRecorte(
   c: ContagemPorAno | undefined | null,
-  ano: number | null,
+  recorte: Recorte,
 ): { valor: number; semData: number } {
   if (!c) return { valor: 0, semData: 0 };
-  if (ano === null) return { valor: c.total, semData: 0 };
-  return { valor: c.porAno[ano] ?? 0, semData: c.semData };
+  if (recorte === null) return { valor: c.total, semData: 0 };
+  return {
+    valor: recorte.reduce((s, ano) => s + (c.porAno[ano] ?? 0), 0),
+    semData: c.semData,
+  };
 }
 
 /**
@@ -27,22 +36,45 @@ export interface Cumprimento {
   atingidos: number;
 }
 
-/** Meta/realizado do recorte: um ano específico ou o acumulado (Meta Total × YTD). */
+/**
+ * Meta/realizado do recorte: o acumulado da parceria (Meta Total × YTD) quando
+ * não há ano escolhido, ou a soma dos anos do recorte.
+ *
+ * Somar anos vale para indicador cumulativo (contagem, R$). Para NPS e
+ * percentual de execução, somar dois anos não faria sentido — nesses casos a
+ * média é a leitura correta, e é o que `mediaDoRecorte` faz.
+ */
 export function valoresDoRecorte(
   ind: Indicador,
-  ano: number | null,
+  recorte: Recorte,
 ): { meta: number; realizado: number } {
-  if (ano === null) return { meta: ind.metaTotal, realizado: ind.realizadoTotal };
-  const doAno = ind.anos.find((a) => a.ano === ano);
-  return { meta: doAno?.meta ?? 0, realizado: doAno?.realizado ?? 0 };
+  if (recorte === null) return { meta: ind.metaTotal, realizado: ind.realizadoTotal };
+
+  const anos = ind.anos.filter((a) => recorte.includes(a.ano));
+  if (!ehCumulativo(ind)) {
+    // Média dos anos com valor: dois anos de NPS 80 não são NPS 160.
+    const comMeta = anos.filter((a) => a.meta > 0);
+    const comRealizado = anos.filter((a) => a.realizado > 0);
+    return {
+      meta: comMeta.length ? comMeta.reduce((s, a) => s + a.meta, 0) / comMeta.length : 0,
+      realizado: comRealizado.length
+        ? comRealizado.reduce((s, a) => s + a.realizado, 0) / comRealizado.length
+        : 0,
+    };
+  }
+
+  return {
+    meta: anos.reduce((s, a) => s + a.meta, 0),
+    realizado: anos.reduce((s, a) => s + a.realizado, 0),
+  };
 }
 
-export function cumprimento(indicadores: Indicador[], ano: number | null): Cumprimento {
+export function cumprimento(indicadores: Indicador[], recorte: Recorte): Cumprimento {
   let soma = 0;
   let total = 0;
   let atingidos = 0;
   for (const ind of indicadores) {
-    const { meta, realizado } = valoresDoRecorte(ind, ano);
+    const { meta, realizado } = valoresDoRecorte(ind, recorte);
     if (meta <= 0) continue;
     const razao = realizado / meta;
     soma += Math.min(razao, 1);

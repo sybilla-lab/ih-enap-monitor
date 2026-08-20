@@ -1,6 +1,6 @@
 // Tema Angular Material (M3) — https://material.angular.dev/guide/theming
 @use '@angular/material' as mat;
-@use './styles/ih-palette' as ih;
+@use './styles/enap-palette' as enap;
 
 html {
   // 'light dark' segue o sistema; o ThemeService fixa o modo via [data-theme].
@@ -9,8 +9,8 @@ html {
   @include mat.theme((
     color: (
       theme-type: color-scheme,
-      primary: ih.$ih-primary-palette,
-      tertiary: ih.$ih-tertiary-palette,
+      primary: enap.$enap-primary-palette,
+      tertiary: enap.$enap-tertiary-palette,
     ),
     typography: Roboto,
     density: 0,
@@ -21,17 +21,25 @@ html[data-theme='light'] { color-scheme: light; }
 html[data-theme='dark'] { color-scheme: dark; }
 
 html {
-  // Cor das séries de dados (gráficos e meters). Não usa --mat-sys-primary
-  // porque o tom 80 do dark mode é claro/dessaturado demais para marca de
-  // dado — passos validados (skill dataviz) contra as superfícies reais:
-  // #a23b4a sobre #fff8f7 (light) e #c25361 sobre #181212 (dark).
-  --app-viz-accent: light-dark(#a23b4a, #c25361);
+  // Cor institucional da Enap (brandbook: Pantone 3165C, RGB 2 66 72). É a cor
+  // que o manual manda estar presente em toda composição — aqui ela é a marca
+  // do painel e a base do tema.
+  --app-verde-enap: #024248;
 
-  // Segunda marca de dado, sempre no papel de contexto (plano, referência,
-  // aporte) contra o accent — padrão "ênfase" (uma cor + cinza) em vez de
-  // paleta categórica. Separação validada contra o accent nos dois modos:
-  // ΔE normal 19,3 / CVD 15,4 (light) e 20,3 / 15,4 (dark).
-  --app-viz-neutral: light-dark(#9f8c8d, #b4a9a9);
+  // Cor das séries de dados. Não usa --mat-sys-primary porque os tons que o M3
+  // gera para cada modo não servem como marca de dado (escuro demais no claro,
+  // claro demais no escuro). Passos do próprio Verde Enap, validados pela skill
+  // dataviz contra as superfícies reais — todas as checagens aprovadas.
+  --app-viz-accent: light-dark(#00918e, #00a9a6);
+
+  // Segunda cor de dado: goiaba da paleta complementar da Enap, para quando um
+  // gráfico precisa de duas séries de verdade. Separação contra o accent:
+  // ΔE normal 27,9 / CVD 13,1 (claro) e 28,9 / 13,9 (escuro).
+  --app-viz-2: light-dark(#c43a2c, #e85c45);
+
+  // Cinza de contexto (plano, referência, trilho) — papel de fundo, nunca de
+  // categoria concorrente.
+  --app-viz-neutral: light-dark(#8a9797, #a6b4b4);
 
   // Serifada só onde a página fala (títulos e números-herói); dados e
   // interface seguem em Roboto, que tem numerais tabulares melhores.

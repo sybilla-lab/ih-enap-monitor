@@ -3,6 +3,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { DataService } from '../../../core/services/data.service';
 import { GlobalFilterService } from '../../../core/services/global-filter.service';
 import { formatMoeda, formatPercentual, formatQuantidade } from '../../../core/util/numero.util';
+import { retornoDoRecorte } from '../../../core/util/retorno.util';
 import { SimuladorAlavancagemComponent } from './simulador-alavancagem.component';
 
 /** Largura de `valor` numa escala em que o maior dos dois vale 100%. */
@@ -57,42 +58,26 @@ export class RetornoBlocosComponent {
 
   private captacao = computed(() => this.dados.indicadores().find((i) => i.unidade === 'moeda'));
 
-  /** Aporte e captação do recorte em vigor: um ano específico ou o acumulado. */
-  private recorte = computed(() => {
-    const p = this.parceria();
-    if (!p) return null;
-    const ano = this.filtro.ano();
-    if (ano === null) {
-      return {
-        ano: null,
-        sufixo: 'acumulado da parceria',
-        aporte: p.investimentoInicial,
-        captado: p.valorCaptado,
-      };
-    }
-    return {
-      ano,
-      sufixo: `em ${ano}`,
-      aporte: p.aportes.find((a) => a.ano === ano)?.valor ?? 0,
-      captado: this.captacao()?.anos.find((a) => a.ano === ano)?.realizado ?? 0,
-    };
-  });
+  /** Aporte e captação do recorte em vigor — a mesma conta que a Home usa. */
+  private retorno = computed(() =>
+    retornoDoRecorte(this.parceria(), this.captacao(), this.filtro.recorte()),
+  );
 
   /** Régua do real: o aporte na proporção exata do que ele captou. */
   readonly regua = computed(() => {
-    const r = this.recorte();
+    const r = this.retorno();
     const p = this.parceria();
     if (!r || !p) return null;
-    const temAlavancagem = r.aporte > 0 && r.captado > 0;
     return {
-      sufixo: r.sufixo,
-      alavancagem: temAlavancagem ? formatMoeda(r.captado / r.aporte) : null,
-      // Sem aporte no ano não existe razão a exibir; o acumulado fica de âncora.
-      alternativa: temAlavancagem
-        ? null
-        : r.ano === null
-          ? 'sem dados de aporte e captação'
-          : `sem aporte registrado em ${r.ano} — no acumulado da parceria, ${formatMoeda(p.alavancagem)} por R$ 1,00`,
+      sufixo: this.filtro.rotulo(),
+      alavancagem: r.alavancagem === null ? null : formatMoeda(r.alavancagem),
+      // Sem aporte no recorte não existe razão a exibir; o acumulado fica de âncora.
+      alternativa:
+        r.alavancagem !== null
+          ? null
+          : this.filtro.recorte() === null
+            ? 'sem dados de aporte e captação'
+            : `sem aporte registrado no recorte — no acumulado da parceria, ${formatMoeda(p.alavancagem)} por R$ 1,00`,
       investimento: formatMoeda(r.aporte),
       captado: formatMoeda(r.captado),
       // Ambas as barras na mesma escala (o maior dos dois = 100%), inclusive
@@ -103,30 +88,33 @@ export class RetornoBlocosComponent {
   });
 
   readonly numeros = computed(() => {
-    const r = this.recorte();
-    const p = this.parceria();
-    if (!r || !p) return [];
-    const temAporte = r.aporte > 0;
+    const r = this.retorno();
+    if (!r) return [];
+    const sufixo = this.filtro.rotulo();
     return [
       {
         rotulo: 'Aporte da Enap',
         valor: formatMoeda(r.aporte),
-        nota: r.ano === null ? `${p.aportes.filter((a) => a.valor > 0).length} anos de aporte` : r.sufixo,
+        nota:
+          this.filtro.recorte() === null ? `${r.anosDeAporte} anos de aporte` : sufixo,
       },
       {
         rotulo: 'Captado de fontes externas',
         valor: formatMoeda(r.captado),
-        nota: `públicas, privadas e internacionais · ${r.sufixo}`,
+        nota: `públicas, privadas e internacionais · ${sufixo}`,
       },
       {
         rotulo: 'Retorno líquido',
-        valor: formatMoeda(r.captado - r.aporte),
+        valor: formatMoeda(r.liquido),
         nota: 'captado menos aporte',
       },
       {
         rotulo: 'ROI',
-        valor: temAporte ? formatPercentual(((r.captado - r.aporte) / r.aporte) * 100) : '—',
-        nota: temAporte ? `retorno líquido sobre o aporte · ${r.sufixo}` : 'exige aporte no recorte',
+        valor: r.roiPercentual === null ? '—' : formatPercentual(r.roiPercentual),
+        nota:
+          r.roiPercentual === null
+            ? 'exige aporte no recorte'
+            : `retorno líquido sobre o aporte · ${sufixo}`,
       },
     ];
   });
@@ -137,7 +125,7 @@ export class RetornoBlocosComponent {
       .map((a) => ({
         ano: a.ano,
         valor: formatMoeda(a.valor),
-        foraDoRecorte: this.filtro.ano() !== null && this.filtro.ano() !== a.ano,
+        foraDoRecorte: !(this.filtro.recorte()?.includes(a.ano) ?? true),
       })),
   );
 
@@ -147,7 +135,7 @@ export class RetornoBlocosComponent {
     const anos = ind.anos.filter((a) => a.meta > 0 || a.realizado > 0);
     const maior = Math.max(...anos.map((a) => Math.max(a.meta, a.realizado)), 1);
     const anoCorrente = new Date().getFullYear();
-    const selecionado = this.filtro.ano();
+    const selecionado = this.filtro.recorte();
     return anos.map((a) => ({
       ano: a.ano,
       metaLabel: formatMoeda(a.meta),
@@ -155,7 +143,7 @@ export class RetornoBlocosComponent {
       larguraMeta: (a.meta / maior) * 100,
       larguraRealizado: (a.realizado / maior) * 100,
       emCurso: a.ano === anoCorrente,
-      foraDoRecorte: selecionado !== null && selecionado !== a.ano,
+      foraDoRecorte: !(selecionado?.includes(a.ano) ?? true),
     }));
   });
 

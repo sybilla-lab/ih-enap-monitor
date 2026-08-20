@@ -1,95 +1,23 @@
 <!-- Sem planilha carregada não existe painel: a tela de carga vem antes do
-     shell inteiro (menu, toolbar, filtros). Quando a API entrar no lugar do
+     shell inteiro (marca, menu, filtros). Quando a API entrar no lugar do
      upload, é só esta condição que muda. -->
 @if (!dados.pronto()) {
   <app-carregar />
 } @else {
-  <mat-sidenav-container class="shell">
-    <mat-sidenav
-      #drawer
-      class="shell__nav"
-      [mode]="isHandset() ? 'over' : 'side'"
-      [opened]="!isHandset()"
-    >
-      <a class="shell__brand" routerLink="/home" aria-label="Ir para a página inicial">
-        <span class="shell__brand-mark" aria-hidden="true">IH</span>
-        <span class="shell__brand-text">
-          <strong>Enap × Impact Hub</strong>
-          <small>Painel da Parceria</small>
-        </span>
-      </a>
+  <app-topbar />
 
-      <mat-nav-list class="shell__nav-list">
-        @for (item of navItems; track item.route) {
-          <a
-            mat-list-item
-            [routerLink]="item.route"
-            routerLinkActive="shell__nav-item--active"
-            (click)="isHandset() && drawer.close()"
-          >
-            <mat-icon matListItemIcon>{{ item.icon }}</mat-icon>
-            <span matListItemTitle>{{ item.label }}</span>
-            @if (item.descricao) {
-              <span matListItemLine class="shell__nav-desc">{{ item.descricao }}</span>
-            }
-          </a>
-        }
-      </mat-nav-list>
+  <div class="shell">
+    <main class="shell__main">
+      <router-outlet />
+    </main>
 
-      <div class="shell__nav-footer">Programa de Parceria · 2023–2028</div>
-    </mat-sidenav>
-
-    <mat-sidenav-content class="shell__content">
-      <header class="shell__toolbar">
-        <button mat-icon-button (click)="drawer.toggle()" aria-label="Alternar menu">
-          <mat-icon>menu</mat-icon>
-        </button>
-        <span class="shell__toolbar-title">Parceria Enap × Impact Hub Brasil</span>
-        <span class="shell__spacer"></span>
-
-        @if (dados.origem(); as origem) {
-          <button
-            mat-icon-button
-            (click)="dados.limpar()"
-            [matTooltip]="'Planilha em uso: ' + origem.arquivo + '. Clique para trocar.'"
-            aria-label="Trocar planilha"
-          >
-            <mat-icon>swap_horiz</mat-icon>
-          </button>
-        }
-
-        <button
-          mat-icon-button
-          (click)="theme.toggle()"
-          [matTooltip]="theme.mode() === 'dark' ? 'Modo claro' : 'Modo escuro'"
-          [attr.aria-label]="theme.mode() === 'dark' ? 'Ativar modo claro' : 'Ativar modo escuro'"
-        >
-          <mat-icon>{{ theme.mode() === 'dark' ? 'light_mode' : 'dark_mode' }}</mat-icon>
-        </button>
-      </header>
-
-      <main
-        class="shell__main"
-        [class.shell__main--dock]="escopo.visivel()"
-        [class.shell__main--dock-min]="escopo.minimizado()"
-      >
-        <!-- Assinatura das duas casas: no shell, aparece em toda página. -->
-        <app-marcas />
-        <router-outlet />
-      </main>
-
-      <footer class="shell__footer">
-        @if (dados.origem(); as origem) {
-          Dados lidos de <strong>{{ origem.arquivo }}</strong> nesta sessão — o arquivo não sai
-          do seu navegador.
-        } @else {
-          Dados provenientes da Planilha Oficial de Indicadores da Parceria Enap × Impact Hub Brasil.
-        }
-      </footer>
-    </mat-sidenav-content>
-  </mat-sidenav-container>
-
-  <!-- Fora do sidenav-container de propósito: o dock é primeiro plano, fixo na
-       viewport, e não pode herdar o recorte nem o empilhamento do shell. -->
-  <app-filter-dock />
+    <footer class="shell__footer">
+      @if (dados.origem(); as origem) {
+        Dados lidos de <strong>{{ origem.arquivo }}</strong> nesta sessão — o arquivo não sai do
+        seu navegador.
+      } @else {
+        Dados provenientes da Planilha Oficial de Indicadores da Parceria Enap × Impact Hub Brasil.
+      }
+    </footer>
+  </div>
 }

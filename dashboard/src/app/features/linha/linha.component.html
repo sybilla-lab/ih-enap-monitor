@@ -63,7 +63,7 @@
                   scope="col"
                   colspan="2"
                   class="tabela__grupo"
-                  [class.tabela__grupo--ativo]="filtro.ano() === ano"
+                  [class.tabela__grupo--ativo]="filtro.selecionado(ano)"
                 >
                   {{ ano }}
                 </th>
@@ -74,10 +74,10 @@
               <th scope="col" class="tabela__num">Realizado</th>
               <th scope="col" class="tabela__num">%</th>
               @for (ano of anos; track ano) {
-                <th scope="col" class="tabela__num" [class.tabela__col--ativa]="filtro.ano() === ano">
+                <th scope="col" class="tabela__num" [class.tabela__col--ativa]="filtro.selecionado(ano)">
                   Meta
                 </th>
-                <th scope="col" class="tabela__num" [class.tabela__col--ativa]="filtro.ano() === ano">
+                <th scope="col" class="tabela__num" [class.tabela__col--ativa]="filtro.selecionado(ano)">
                   Realizado
                 </th>
               }
@@ -103,14 +103,14 @@
                 @for (a of ind.anos; track a.ano) {
                   <td
                     class="tabela__num"
-                    [class.tabela__col--ativa]="filtro.ano() === a.ano"
+                    [class.tabela__col--ativa]="a.selecionado"
                     [class.tabela__vazio]="a.vazio"
                   >
                     {{ a.meta }}
                   </td>
                   <td
                     class="tabela__num"
-                    [class.tabela__col--ativa]="filtro.ano() === a.ano"
+                    [class.tabela__col--ativa]="a.selecionado"
                     [class.tabela__vazio]="a.vazio"
                   >
                     <span [class.tabela__pct--ok]="a.atingido">{{ a.realizado }}</span>

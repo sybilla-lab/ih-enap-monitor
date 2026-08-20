@@ -1,135 +1,30 @@
+// Sem gaveta lateral: a barra flutuante ocupa o topo e o conteúdo usa a
+// largura toda. A folga superior é a altura da barra (duas linhas com o filtro)
+// mais o respiro — a barra flutua sobre o conteúdo, então nada pode nascer
+// embaixo dela.
 .shell {
-  height: 100%;
-
-  &__nav {
-    width: 264px;
-    border-right: 1px solid var(--mat-sys-outline-variant);
-    background: var(--mat-sys-surface);
-
-    // O conteúdo projetado vive no container interno do mat-sidenav;
-    // é nele que o flex precisa atuar para o rodapé descer.
-    ::ng-deep .mat-drawer-inner-container {
-      display: flex;
-      flex-direction: column;
-    }
-  }
-
-  &__brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 20px 16px;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  &__brand-mark {
-    display: grid;
-    place-items: center;
-    width: 40px;
-    height: 40px;
-    flex-shrink: 0;
-    border-radius: 10px;
-    background: var(--mat-sys-primary);
-    color: var(--mat-sys-on-primary);
-    font-size: 15px;
-    font-weight: 800;
-    letter-spacing: 0.5px;
-  }
-
-  &__brand-text {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.25;
-
-    strong {
-      font: var(--mat-sys-title-small);
-      font-weight: 700;
-    }
-
-    small {
-      font: var(--mat-sys-body-small);
-      color: var(--mat-sys-on-surface-variant);
-    }
-  }
-
-  &__nav-list {
-    flex: 1;
-    padding-inline: 8px;
-  }
-
-  // Nome da linha em duas alturas: rótulo curto e o tema da linha embaixo.
-  &__nav-desc {
-    font: var(--mat-sys-body-small);
-    color: var(--mat-sys-on-surface-variant);
-  }
-
-  &__nav-footer {
-    padding: 16px;
-    font: var(--mat-sys-body-small);
-    color: var(--mat-sys-on-surface-variant);
-    border-top: 1px solid var(--mat-sys-outline-variant);
-  }
-
-  &__content {
-    display: flex;
-    flex-direction: column;
-    background: var(--mat-sys-surface-container);
-  }
-
-  &__toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: color-mix(in srgb, var(--mat-sys-surface-container) 85%, transparent);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--mat-sys-outline-variant);
-  }
-
-  &__toolbar-title {
-    font: var(--mat-sys-title-medium);
-  }
-
-  &__spacer {
-    flex: 1;
-  }
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--mat-sys-surface-container);
 
   &__main {
     flex: 1;
-    width: min(1160px, 100% - 48px);
+    width: min(1400px, 100% - 32px);
     margin-inline: auto;
-    padding-block: 24px;
-  }
+    padding-block: 132px 28px;
 
-  // O dock flutua sobre o conteúdo; a folga no topo garante que ele nunca
-  // cubra o início da página quando o scroll está no começo.
-  &__main--dock {
-    padding-top: 78px;
-  }
-
-  &__main--dock.shell__main--dock-min {
-    padding-top: 62px;
+    @media (max-width: 1023px) {
+      padding-top: 124px;
+    }
   }
 
   &__footer {
-    width: min(1160px, 100% - 48px);
+    width: min(1400px, 100% - 32px);
     margin-inline: auto;
-    padding-block: 16px;
+    padding-block: 16px 24px;
     font: var(--mat-sys-body-small);
     color: var(--mat-sys-on-surface-variant);
     border-top: 1px solid var(--mat-sys-outline-variant);
   }
-}
-
-.shell__nav-item--active {
-  --mat-list-list-item-label-text-weight: 600;
-  --mat-list-list-item-leading-icon-color: var(--mat-sys-primary);
-  --mat-list-list-item-label-text-color: var(--mat-sys-primary);
-
-  background: var(--mat-sys-primary-container);
-  border-radius: 12px;
 }

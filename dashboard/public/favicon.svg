@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="16" fill="#8C2A3A"/>
-  <text
-    x="32"
-    y="34"
-    text-anchor="middle"
-    dominant-baseline="central"
-    font-family="Roboto, Arial, sans-serif"
-    font-size="26"
-    font-weight="800"
-    letter-spacing="-1"
-    fill="#FFFFFF"
-  >IH</text>
+  <!-- Verde Enap (#024248), a cor institucional do brandbook. O traço claro
+       é o Verde Enap claro usado como cor de dado no painel. -->
+  <rect width="64" height="64" rx="16" fill="#024248"/>
+  <path
+    d="M14 40 L24 26 L32 36 L40 20 L50 34"
+    fill="none"
+    stroke="#00A9A6"
+    stroke-width="5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="50" cy="34" r="4.5" fill="#FFFFFF"/>
 </svg>

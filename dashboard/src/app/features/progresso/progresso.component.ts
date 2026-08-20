@@ -28,7 +28,7 @@ export class ProgressoComponent {
 
   /** O número que a página lidera: cumprimento médio das metas do recorte. */
   readonly destaque = computed(() => {
-    const c = cumprimento(this.dados.indicadores(), this.filtro.ano());
+    const c = cumprimento(this.dados.indicadores(), this.filtro.recorte());
     return {
       pct: c.pct,
       valor: formatPercentual(c.pct),
