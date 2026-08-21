@@ -86,6 +86,28 @@ export interface ModeloRelatorio {
   notas: { titulo: string; texto: string }[];
 }
 
+/**
+ * Lê um arquivo do próprio site e devolve como data URI — é o formato que o
+ * pdfmake aceita para imagens. Resolve contra o `base href` porque o painel é
+ * publicado numa subpasta. Se a marca não estiver lá, o documento sai sem ela
+ * em vez de falhar.
+ */
+async function comoDataUri(caminho: string): Promise<string | null> {
+  try {
+    const resposta = await fetch(new URL(caminho, document.baseURI).href);
+    if (!resposta.ok) return null;
+    const blob = await resposta.blob();
+    return await new Promise<string | null>((resolve) => {
+      const leitor = new FileReader();
+      leitor.onload = () => resolve(typeof leitor.result === 'string' ? leitor.result : null);
+      leitor.onerror = () => resolve(null);
+      leitor.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 /** Divide em fileiras de tamanho fixo, completando a última com vazios. */
 function emFileiras<T>(itens: T[], porFileira: number): (T | null)[][] {
   const fileiras: (T | null)[][] = [];
@@ -204,9 +226,12 @@ const layoutTabela = {
 
 /** Monta o documento e dispara o download com nome pronto. */
 export async function baixarRelatorio(m: ModeloRelatorio): Promise<void> {
-  const [{ default: pdfMake }, { default: helvetica }] = await Promise.all([
+  const [{ default: pdfMake }, { default: helvetica }, logoEnap, logoIh] = await Promise.all([
     import('pdfmake/build/pdfmake'),
     import('pdfmake/build/standard-fonts/Helvetica'),
+    // Versões coloridas: o PDF sai sempre em fundo claro.
+    comoDataUri('logos/enap.png'),
+    comoDataUri('logos/impact-hub.png'),
   ]);
   pdfMake.addFontContainer(helvetica);
 
@@ -215,15 +240,25 @@ export async function baixarRelatorio(m: ModeloRelatorio): Promise<void> {
 
   // ------------------------------------------------------------- capa ----
   conteudo.push(
+    // Assinatura conjunta na hierarquia do brandbook: Enap maior, Impact Hub
+    // em seguida, separados por um fio.
     {
       columns: [
+        logoEnap
+          ? { image: logoEnap, width: 92, margin: [0, 0, 0, 0] }
+          : { text: 'Enap', bold: true, fontSize: 11, color: VERDE_ENAP },
         {
-          width: 22,
-          canvas: [{ type: 'rect', x: 0, y: 0, w: 20, h: 20, r: 4, color: VERDE_ENAP }],
+          width: 1,
+          canvas: [{ type: 'line', x1: 0, y1: 6, x2: 0, y2: 30, lineWidth: 0.8, lineColor: FIO }],
+          margin: [10, 0, 10, 0],
         },
-        { text: 'Enap × Impact Hub Brasil', bold: true, fontSize: 10, margin: [6, 5, 0, 0] },
+        logoIh
+          ? { image: logoIh, width: 62, margin: [0, 6, 0, 0] }
+          : { text: 'Impact Hub Brasil', bold: true, fontSize: 10 },
+        { text: '', width: '*' },
       ],
-      margin: [0, 0, 0, 60],
+      columnGap: 0,
+      margin: [0, 0, 0, 54],
     },
     {
       text: 'PROGRAMA DE PARCERIA · 2024–2028',
