@@ -7,7 +7,10 @@
   </section>
 } @else {
   <div class="pagina">
-    <header class="app-masthead">
+    <!-- Mesmo padrão da Home: nome oficial à esquerda, texto da linha à direita.
+         Os títulos da revisão 02 são longos (o da Linha IV tem cinco linhas
+         empilhado) e empurravam os indicadores para fora da primeira dobra. -->
+    <header class="app-masthead app-masthead--editorial">
       <p class="app-masthead__eyebrow">{{ linha().id }} · {{ filtro.rotulo() }}</p>
       <h1 class="app-masthead__titulo">{{ linha().nome }}</h1>
       <p class="app-masthead__lead">{{ resumo() }}</p>

@@ -434,6 +434,10 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
       display: flex;
       align-items: center;
       flex-wrap: wrap;
+      // Alinhado à direita, sob o gatilho que o abriu: o controle e o painel
+      // que ele comanda ficam no mesmo eixo, sem o olho ter de atravessar a
+      // barra inteira.
+      justify-content: flex-end;
       gap: 6px;
       padding: 10px 14px 12px;
       border-top: 1px solid color-mix(in srgb, var(--mat-sys-outline) 18%, transparent);

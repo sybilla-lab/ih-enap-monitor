@@ -177,10 +177,13 @@ export interface IndicadorApresentado {
       }
     }
 
-    // Série de anos: trilho = meta do ano, barra = realizado.
+    // Série de anos: trilho = meta do ano, barra = realizado. As colunas se
+    // dividem pelo número de anos exibidos — fixar cinco deixava um vão à
+    // direita depois que os anos futuros zerados saíram da série.
     .anos {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
       gap: 8px;
     }
 
@@ -200,11 +203,13 @@ export interface IndicadorApresentado {
         opacity: 0.45;
       }
 
+      // Coluna larga não vira barra larga: a barra tem uma faixa de largura
+      // confortável e fica centrada no espaço que sobrar.
       &__grafico {
         position: relative;
         display: block;
         width: 100%;
-        max-width: 34px;
+        max-width: 44px;
         height: 54px;
       }
 

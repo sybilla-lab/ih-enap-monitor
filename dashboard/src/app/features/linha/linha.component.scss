@@ -248,3 +248,12 @@
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
 }
+
+// O texto da linha fica centrado na própria coluna, e não encostado na borda
+// direita da tela: com o título alto à esquerda, o bloco colado na margem
+// deixava um vão no meio do cabeçalho.
+.app-masthead--editorial .app-masthead__lead {
+  justify-self: center;
+  max-width: 58ch;
+  text-align: center;
+}
