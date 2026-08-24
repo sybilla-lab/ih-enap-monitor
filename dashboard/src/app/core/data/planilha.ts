@@ -2,6 +2,9 @@ import type * as XLSX from 'xlsx';
 import {
   ANOS_PARCERIA,
   AportePorAno,
+  Comunicacao,
+  MesComunicacao,
+  MetricaComunicacao,
   ContagemPorAno,
   EntregasOperacionais,
   EscalaDesafios,
@@ -32,13 +35,23 @@ import { parseNumero } from '../util/numero.util';
  * diferentes trazem números diferentes de linhas/colunas em branco, e posição
  * fixa quebrava o painel a cada atualização da fonte.
  */
+/**
+ * Muda sempre que o formato de `DadosPainel` muda. A sessão guardada de uma
+ * versão anterior não tem os campos novos (foi assim que a página de
+ * Comunicação apareceu vazia com a planilha certa carregada): em vez de exibir
+ * meio painel, o app descarta o que guardou e pede a planilha de novo.
+ */
+export const VERSAO_DADOS = 2;
+
 export interface DadosPainel {
+  versao: number;
   arquivo: string;
   lidoEm: string;
   indicadores: Indicador[];
   parceria: ParceriaResumo | null;
   territorio: TerritorioBruto;
   entregas: EntregasOperacionais;
+  comunicacao: Comunicacao;
 }
 
 export class PlanilhaInvalidaError extends Error {
@@ -74,12 +87,14 @@ export async function lerPlanilha(arquivo: File): Promise<DadosPainel> {
   };
 
   return {
+    versao: VERSAO_DADOS,
     arquivo: arquivo.name,
     lidoEm: new Date().toISOString(),
     indicadores: lerMetas(linhas('Metas')),
     parceria: lerParceria(linhas('Parceria')),
     territorio: lerTerritorio(linhas),
     entregas: lerEntregas(linhas),
+    comunicacao: lerComunicacao(linhas),
   };
 }
 
@@ -261,6 +276,81 @@ function lerEntregas(linhas: (nome: string) => string[][]): EntregasOperacionais
   }
 
   return { projetos, solucoes, participantesDesafios: participantes, premiacao };
+}
+
+// -------------------------------------------------------- Comunicação ----
+
+/**
+ * Aba "Comunicação - Números": uma linha por mês, uma coluna por métrica.
+ *
+ * As métricas são lidas do cabeçalho, não fixadas no código — a equipe de
+ * comunicação vai acrescentar colunas e anos, e o painel deve passar a mostrar
+ * o que for acrescentado sem precisar de alteração aqui. Meses ainda em branco
+ * (o resto do ano) são ignorados.
+ */
+function lerComunicacao(linhas: (nome: string) => string[][]): Comunicacao {
+  const rows = linhas('Comunicação - Números');
+
+  // Acha linha E coluna de "Período": a aba pode vir com colunas ou linhas em
+  // branco à esquerda/acima, e assumir a célula A1 fazia a página inteira
+  // aparecer vazia mesmo com a planilha preenchida.
+  let hIdx = -1;
+  let colPeriodo = -1;
+  for (let i = 0; i < rows.length && hIdx < 0; i++) {
+    const j = rows[i].findIndex((c) => /^per[íi]odo$/i.test((c ?? '').trim()));
+    if (j >= 0) {
+      hIdx = i;
+      colPeriodo = j;
+    }
+  }
+  if (hIdx < 0) return { meses: [], metricas: [] };
+
+  // O nome das métricas pode estar na mesma linha do "Período" ou na de cima —
+  // o cabeçalho da aba é alto e às vezes quebra em duas linhas na planilha.
+  const nomear = (linha: string[] | undefined) =>
+    (linha ?? [])
+      .map((c, i) => ({ rotulo: (c ?? '').trim(), i }))
+      .filter((c) => c.i > colPeriodo && c.rotulo);
+
+  let colunas = nomear(rows[hIdx]);
+  if (!colunas.length) colunas = nomear(rows[hIdx - 1]);
+  if (!colunas.length) return { meses: [], metricas: [] };
+
+  const meses: MesComunicacao[] = [];
+  for (const row of rows.slice(hIdx + 1)) {
+    const periodo = (row[colPeriodo] ?? '').trim();
+    // Aceita "01/2026" e também datas completas ("01/01/2026"), que é como o
+    // Excel devolve quando a célula do período é do tipo data.
+    const m = periodo.match(/^(?:\d{1,2}\/)?(\d{1,2})\/(20\d{2})$/);
+    if (!m) continue; // pula a linha de totais no rodapé
+
+    const valores: Record<string, number> = {};
+    let soma = 0;
+    for (const col of colunas) {
+      const bruto = (row[col.i] ?? '').trim();
+      if (!bruto) continue;
+      const valor = parseNumero(bruto);
+      valores[col.rotulo] = valor;
+      soma += valor;
+    }
+    // Mês zerado é mês que ainda não aconteceu — a planilha já traz o ano
+    // inteiro com os meses futuros em branco ou com zero, e exibi-los só
+    // encolhe as barras do que de fato aconteceu.
+    if (soma > 0) meses.push({ periodo, ano: Number(m[2]), mes: Number(m[1]), valores });
+  }
+
+  const metricas: MetricaComunicacao[] = colunas.map((col) => {
+    const porMes: Record<string, number> = {};
+    let total = 0;
+    for (const mes of meses) {
+      const v = mes.valores[col.rotulo] ?? 0;
+      porMes[mes.periodo] = v;
+      total += v;
+    }
+    return { rotulo: col.rotulo, total, porMes };
+  });
+
+  return { meses, metricas: metricas.filter((m) => m.total > 0) };
 }
 
 // --------------------------------------------------------- Territorial ----

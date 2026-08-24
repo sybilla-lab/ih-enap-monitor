@@ -58,7 +58,7 @@
               <th scope="col" colspan="3" class="tabela__grupo tabela__grupo--total">
                 Acumulado 2024–2028
               </th>
-              @for (ano of anos; track ano) {
+              @for (ano of anosDaSerie(); track ano) {
                 <th
                   scope="col"
                   colspan="2"
@@ -73,7 +73,7 @@
               <th scope="col" class="tabela__num">Meta</th>
               <th scope="col" class="tabela__num">Realizado</th>
               <th scope="col" class="tabela__num">%</th>
-              @for (ano of anos; track ano) {
+              @for (ano of anosDaSerie(); track ano) {
                 <th scope="col" class="tabela__num" [class.tabela__col--ativa]="filtro.selecionado(ano)">
                   Meta
                 </th>

@@ -70,6 +70,12 @@ export interface ModeloRelatorio {
     cenarios: { aporte: string; central: string; minimo: string; maximo: string }[];
   } | null;
   escala: { meta: number; projecao: number; multiplo: string; nota: string } | null;
+  comunicacao: {
+    periodo: string;
+    totalMeses: number;
+    colunas: string[];
+    linhas: { metrica: string; valores: string[]; total: string }[];
+  } | null;
   territorio: {
     ufsAlcancadas: number;
     totalUfs: number;
@@ -633,9 +639,54 @@ export async function baixarRelatorio(m: ModeloRelatorio): Promise<void> {
     );
   }
 
-  // ----------------------------------------------------------- 05 notas ----
+  // ----------------------------------------------------- 05 comunicação ----
+  if (m.comunicacao) {
+    const c = m.comunicacao;
+    conteudo.push(
+      ...cabecalhoSecao(
+        '05',
+        'Comunicação',
+        `Blog, site e peças produzidas — ${c.periodo}, ${c.totalMeses} meses com registro.`,
+      ),
+      {
+        table: {
+          headerRows: 1,
+          // Métrica na primeira coluna, meses nas demais: em A4 retrato cabem
+          // seis meses lado a lado; dez métricas como colunas, não.
+          widths: ['*', ...c.colunas.map(() => 'auto'), 'auto'],
+          body: [
+            ['Métrica', ...c.colunas, 'Total'].map((t, i) => ({
+              text: t,
+              fontSize: 8,
+              bold: true,
+              color: TINTA2,
+              alignment: i === 0 ? 'left' : 'right',
+            })),
+            ...c.linhas.map((l) => [
+              { text: l.metrica, fontSize: 8.5 },
+              ...l.valores.map((v) => ({ text: v, fontSize: 8.5, alignment: 'right' })),
+              { text: l.total, fontSize: 8.5, alignment: 'right', bold: true },
+            ]),
+          ],
+        },
+        layout: layoutTabela,
+      },
+      {
+        text: 'Fonte: aba "Comunicação - Números". As métricas são lidas como estão na planilha; meses sem nenhum registro ficam fora da série.',
+        fontSize: 8,
+        color: TINTA2,
+        margin: [0, 10, 0, 0],
+      },
+    );
+  }
+
+  // ----------------------------------------------------------- 06 notas ----
   conteudo.push(
-    ...cabecalhoSecao('05', 'Notas metodológicas', 'Como cada número deste relatório foi construído.'),
+    ...cabecalhoSecao(
+      m.comunicacao ? '06' : '05',
+      'Notas metodológicas',
+      'Como cada número deste relatório foi construído.',
+    ),
     ...m.notas.flatMap((n) => [
       { text: n.titulo, fontSize: 10, bold: true, margin: [0, 10, 0, 2] },
       { text: n.texto, fontSize: 8.5, color: TINTA2, lineHeight: 1.25 },

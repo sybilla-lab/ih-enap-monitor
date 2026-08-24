@@ -1,0 +1,203 @@
+@if (!dados.carregado()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Carregando dados de comunicação" />
+} @else {
+  <div class="pagina">
+    <header class="app-masthead">
+      <p class="app-masthead__eyebrow">Comunicação</p>
+      <h1 class="app-masthead__titulo">O alcance da parceria fora dos indicadores</h1>
+      <p class="app-masthead__lead">
+        Blog, site e peças produzidas para os projetos. É um acompanhamento em construção: a
+        equipe de comunicação está estruturando a coleta, e as métricas que forem entrando na
+        planilha aparecem aqui automaticamente.
+      </p>
+    </header>
+
+    @if (vazio()) {
+      <section class="app-card estado-vazio">
+        <h2>Sem números de comunicação neste recorte</h2>
+        <p>
+          @if (anosDisponiveis().length) {
+            A série disponível hoje cobre {{ anosDisponiveis().join(', ') }}, e é mensal. Ajuste o
+            filtro de ano no topo para ver esses meses.
+          } @else {
+            A aba “Comunicação - Números” da planilha ainda não tem meses preenchidos.
+          }
+        </p>
+      </section>
+    } @else {
+      <dl class="app-ledger" aria-label="Destaques de comunicação">
+        <div class="app-ledger__item">
+          <dt class="app-ledger__rotulo">Período coberto</dt>
+          <dd class="app-ledger__valor">{{ periodo() }}</dd>
+          <dd class="app-ledger__nota">{{ tabela().linhas.length }} meses com registro</dd>
+        </div>
+        @for (d of destaques(); track d.rotulo) {
+          <div class="app-ledger__item">
+            <dt class="app-ledger__rotulo">{{ d.rotulo }}</dt>
+            <dd class="app-ledger__valor">{{ d.valor }}</dd>
+            <dd class="app-ledger__nota">no período</dd>
+          </div>
+        }
+      </dl>
+
+      <section class="app-card bloco">
+        <h2 class="bloco__titulo">Mês a mês</h2>
+        <p class="bloco__subtitulo">
+          Cada métrica na própria escala — a comparação que interessa é a do mês contra os outros
+          meses da mesma métrica, não entre métricas de grandezas diferentes.
+        </p>
+
+        <div class="series">
+          @for (s of series(); track s.rotulo) {
+            <figure class="serie">
+              <figcaption class="serie__cabecalho">
+                <span class="serie__nome">{{ s.rotulo }}</span>
+                <span class="serie__numeros">
+                  <strong>{{ s.total }}</strong>
+                  <span>total · média {{ s.media }}/mês</span>
+                </span>
+              </figcaption>
+
+              <div class="serie__grafico" role="img" [attr.aria-label]="s.rotulo + ': ' + s.total + ' no período'">
+                @for (p of s.pontos; track p.periodo) {
+                  <span class="coluna" [title]="p.periodo + ': ' + p.rotulo">
+                    <span class="coluna__valor">{{ p.rotulo }}</span>
+                    <span class="coluna__barra">
+                      <span class="coluna__fill" [style.height.%]="p.altura"></span>
+                    </span>
+                    <span class="coluna__mes">{{ p.rotuloCurto }}</span>
+                  </span>
+                }
+              </div>
+            </figure>
+          }
+        </div>
+      </section>
+
+      <!-- Leitura focada: uma métrica por vez, em escala cheia. Complementa a
+           grade acima, que serve para varrer todas de uma vez. -->
+      @if (detalhe(); as d) {
+        <section class="app-card bloco">
+          <div class="foco__cabecalho">
+            <div>
+              <h2 class="bloco__titulo">Uma métrica por vez</h2>
+              <p class="bloco__subtitulo">
+                Escolha o que olhar de perto — a grade acima compara as frentes, esta leitura
+                abre uma delas.
+              </p>
+            </div>
+          </div>
+
+          <div class="seletor" role="group" aria-label="Escolher métrica">
+            @for (s of series(); track s.rotulo) {
+              <button
+                type="button"
+                class="seletor__opcao"
+                [class.seletor__opcao--ativa]="s.rotulo === metricaAtiva()"
+                [attr.aria-pressed]="s.rotulo === metricaAtiva()"
+                (click)="escolher(s.rotulo)"
+              >
+                {{ s.rotulo }}
+              </button>
+            }
+          </div>
+
+          <div class="foco">
+            <dl class="foco__numeros">
+              <div>
+                <dt>Total no período</dt>
+                <dd>{{ d.total }}</dd>
+              </div>
+              <div>
+                <dt>Média mensal</dt>
+                <dd>{{ d.media }}</dd>
+              </div>
+              <div>
+                <dt>Melhor mês</dt>
+                <dd>{{ d.melhorValor }} <small>{{ d.melhorMes }}</small></dd>
+              </div>
+              <div>
+                <dt>Último mês</dt>
+                <dd
+                  class="foco__variacao"
+                  [class.foco__variacao--sobe]="(d.variacao ?? 0) > 0"
+                  [class.foco__variacao--desce]="(d.variacao ?? 0) < 0"
+                >
+                  {{ d.variacaoTexto }}
+                </dd>
+              </div>
+            </dl>
+
+            <svg
+              class="linha-grafico"
+              [attr.viewBox]="'0 0 ' + d.largura + ' ' + d.altura"
+              role="img"
+              [attr.aria-label]="d.rotulo + ': ' + d.total + ' no período'"
+            >
+              @for (g of d.grade; track g.rotulo) {
+                <line class="linha-grafico__grade" [attr.x1]="0" [attr.x2]="d.largura" [attr.y1]="g.y" [attr.y2]="g.y" />
+              }
+              <path class="linha-grafico__area" [attr.d]="d.area" />
+              <path class="linha-grafico__linha" [attr.d]="d.linha" />
+              @for (p of d.pontos; track p.periodo) {
+                <circle
+                  [class]="p.melhor ? 'linha-grafico__ponto linha-grafico__ponto--melhor' : 'linha-grafico__ponto'"
+                  [attr.cx]="p.x"
+                  [attr.cy]="p.y"
+                  [attr.r]="p.melhor ? 6 : 4"
+                />
+                <text class="linha-grafico__valor" [attr.x]="p.x" [attr.y]="p.y - 14" text-anchor="middle">
+                  {{ p.rotulo }}
+                </text>
+                <text class="linha-grafico__mes" [attr.x]="p.x" [attr.y]="d.altura - 8" text-anchor="middle">
+                  {{ p.rotuloCurto }}
+                </text>
+              }
+            </svg>
+          </div>
+        </section>
+      }
+
+      <section class="app-card bloco">
+        <h2 class="bloco__titulo">Tabela completa</h2>
+        <p class="bloco__subtitulo">Todos os números do período, como estão na planilha.</p>
+
+        <div class="rolagem">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th scope="col">Mês</th>
+                @for (c of tabela().colunas; track c) {
+                  <th scope="col" class="tabela__num">{{ c }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (l of tabela().linhas; track l.periodo) {
+                <tr>
+                  <td>{{ l.periodo }}</td>
+                  @for (v of l.valores; track $index) {
+                    <td class="tabela__num">{{ v }}</td>
+                  }
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                @for (t of tabela().totais; track $index) {
+                  <td class="tabela__num">{{ t }}</td>
+                }
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+    }
+
+    <p class="fonte">
+      Fonte: aba “Comunicação - Números” da Planilha Oficial de Indicadores. As colunas são lidas
+      como estão na planilha — novas métricas entram no painel sem alteração de código.
+    </p>
+  </div>
+}

@@ -49,6 +49,13 @@ export const routes: Routes = [
     loadComponent: carregarLinha,
   },
   {
+    path: 'comunicacao',
+    title: 'Comunicação — Parceria Enap × Impact Hub Brasil',
+    data: { filtros: ['ano'] },
+    loadComponent: () =>
+      import('./features/comunicacao/comunicacao.component').then((m) => m.ComunicacaoComponent),
+  },
+  {
     path: 'territorio',
     title: 'Impacto Territorial — Parceria Enap × Impact Hub Brasil',
     data: { filtros: ['ano'] },

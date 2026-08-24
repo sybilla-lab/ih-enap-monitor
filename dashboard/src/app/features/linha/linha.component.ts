@@ -6,10 +6,10 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { DataService } from '../../core/services/data.service';
 import { GlobalFilterService } from '../../core/services/global-filter.service';
 import {
-  ANOS_PARCERIA,
   Indicador,
   LINHAS_ACAO,
   LinhaAcao,
+  anosVisiveis,
 } from '../../core/models/indicadores.model';
 import { cumprimento, valoresDoRecorte } from '../../core/util/agregacao.util';
 import { formatMoeda, formatPercentual, formatQuantidade } from '../../core/util/numero.util';
@@ -18,18 +18,6 @@ import {
   IndicadorApresentado,
   IndicadorCardComponent,
 } from './components/indicador-card.component';
-
-/** Descrição de cada linha — o que a página promete além dos números. */
-const RESUMOS: Record<string, string> = {
-  'Linha I':
-    'Desafios de inovação aberta — customizados, de grande impacto e em autosserviço na Plataforma Desafios — e o engajamento de agentes públicos nesses projetos.',
-  'Linha II':
-    'Ciclos de aceleração, ideação e incubação de soluções, com a avaliação de quem participa.',
-  'Linha III':
-    'Ambientes de inovação, atividades de conexão, projetos de cocriação, conteúdo e a presença na Semana de Inovação.',
-  'Linha IV':
-    'Captação de recursos fora do orçamento da União, organizações públicas engajadas e o retorno financeiro da parceria.',
-};
 
 /**
  * Página de uma linha de ação, servida para as quatro rotas — a linha vem de
@@ -52,7 +40,6 @@ export class LinhaComponent {
   readonly filtro = inject(GlobalFilterService);
   private rota = inject(ActivatedRoute);
 
-  readonly anos = ANOS_PARCERIA;
   private anoCorrente = new Date().getFullYear();
 
   readonly linha = toSignal(
@@ -60,7 +47,11 @@ export class LinhaComponent {
     { initialValue: LINHAS_ACAO[0] },
   );
 
-  readonly resumo = computed(() => RESUMOS[this.linha().id] ?? '');
+  /** Texto oficial da linha, definido com o cliente (revisão 02). */
+  readonly resumo = computed(() => this.linha().descricao);
+
+  /** Anos exibidos na série: os que já começaram, mais os do filtro. */
+  readonly anosDaSerie = computed(() => anosVisiveis(this.filtro.recorte()));
 
   private indicadoresDaLinha = computed(() =>
     this.dados.indicadores().filter((i) => i.linha === this.linha().id),
@@ -77,13 +68,14 @@ export class LinhaComponent {
 
   readonly indicadores = computed<IndicadorApresentado[]>(() => {
     const anoSelecionado = this.filtro.recorte();
+    const anosDaSerie = this.anosDaSerie();
     return this.indicadoresDaLinha().map((ind) => {
       const formatar = formatador(ind);
       const razao = ind.metaTotal > 0 ? ind.realizadoTotal / ind.metaTotal : null;
       // Escala das colunas: o maior valor do indicador no período vale a altura
       // cheia, para as barras de um mesmo indicador serem comparáveis entre si.
       const maior = Math.max(
-        ...ind.anos.flatMap((a) => [a.meta, a.realizado]),
+        ...ind.anos.filter((a) => anosDaSerie.includes(a.ano)).flatMap((a) => [a.meta, a.realizado]),
         1,
       );
 
@@ -96,7 +88,7 @@ export class LinhaComponent {
         pct: razao === null ? 0 : Math.min(razao * 100, 100),
         pctLabel: razao === null ? '—' : formatPercentual(Math.min(razao * 100, 100)),
         atingido: razao !== null && razao >= 1,
-        anos: ANOS_PARCERIA.map((ano) => {
+        anos: anosDaSerie.map((ano) => {
           // Cada coluna é sempre o ano dela, independente do filtro — o recorte
           // muda o destaque, não o que a série mostra.
           const v = valoresDoRecorte(ind, [ano]);

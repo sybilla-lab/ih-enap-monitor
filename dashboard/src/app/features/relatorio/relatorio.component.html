@@ -475,10 +475,51 @@
     </section>
   }
 
-  <!-- -------------------------------------------------------- 5. notas -->
+  <!-- --------------------------------------------------- 5. comunicação -->
+  @if (comunicacao(); as c) {
+    <section class="secao">
+      <header class="secao__cabecalho">
+        <span class="secao__numero">05</span>
+        <div>
+          <h2>Comunicação</h2>
+          <p>Blog, site e peças produzidas — {{ c.periodo }}, {{ c.totalMeses }} meses com registro.</p>
+        </div>
+      </header>
+
+      <table class="tabela tabela--compacta">
+        <thead>
+          <tr>
+            <th scope="col">Métrica</th>
+            @for (m of c.colunas; track $index) {
+              <th scope="col" class="tabela__num">{{ m }}</th>
+            }
+            <th scope="col" class="tabela__num">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of c.linhas; track l.metrica) {
+            <tr>
+              <td>{{ l.metrica }}</td>
+              @for (v of l.valores; track $index) {
+                <td class="tabela__num">{{ v }}</td>
+              }
+              <td class="tabela__num"><strong>{{ l.total }}</strong></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <p class="nota">
+        Fonte: aba “Comunicação - Números”. As métricas são lidas como estão na planilha; meses
+        sem nenhum registro ficam fora da série.
+      </p>
+    </section>
+  }
+
+  <!-- -------------------------------------------------------- 6. notas -->
   <section class="secao secao--notas">
     <header class="secao__cabecalho">
-      <span class="secao__numero">05</span>
+      <span class="secao__numero">{{ comunicacao() ? '06' : '05' }}</span>
       <div>
         <h2>Notas metodológicas</h2>
         <p>Como cada número deste relatório foi construído.</p>

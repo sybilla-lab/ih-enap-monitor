@@ -16,7 +16,20 @@ import { formatMoeda, formatPercentual, formatQuantidade } from '../../core/util
 import { kpisDaParceria } from '../../core/util/kpis.util';
 import { retornoDoRecorte } from '../../core/util/retorno.util';
 import { escalaComum, graficoAvanco, svgDoMapa, tilesDoMapa } from './grafico-svg';
+
 import { ModeloRelatorio, baixarRelatorio } from './relatorio-pdf';
+
+/**
+ * Paleta do PDF, em valores fixos: o documento nasce sempre em fundo claro e
+ * não tem tokens de tema. Espelha as cores de `relatorio-pdf.ts` — ficaram para
+ * trás na troca de paleta e o mapa saía impresso na cor antiga.
+ */
+const CORES_PDF = { acento: '#00918e', fio: '#d8dadb', tinta: '#191c1d' };
+
+const MESES_CURTOS = [
+  'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
+  'jul', 'ago', 'set', 'out', 'nov', 'dez',
+];
 
 /**
  * Relatório executivo em documento: uma peça pensada para virar PDF pelo
@@ -112,7 +125,7 @@ export class RelatorioComponent {
         ano,
       );
       return {
-        rotulo: `${linha.id} · ${linha.nome}`,
+        rotulo: `${linha.id} · ${linha.curto}`,
         detalhe: `${c.total} indicadores · ${c.atingidos} atingidos`,
         valor: formatPercentual(c.pct),
         preenchimento: c.pct,
@@ -216,6 +229,46 @@ export class RelatorioComponent {
       nota: e.nota,
       multiplo: formatQuantidade(Math.round((e.projecao / e.meta) * 10) / 10),
       pontos: Array.from({ length: e.projecao }, (_, i) => i < e.meta),
+    };
+  });
+
+  // ---------------------------------------------------------- comunicação ----
+
+  /**
+   * Comunicação no relatório: uma linha por métrica e uma coluna por mês.
+   *
+   * É a transposta da tabela da página. Em A4 retrato cabem seis meses lado a
+   * lado; dez métricas como colunas, não — e o documento precisa ser lido
+   * impresso.
+   */
+  readonly comunicacao = computed(() => {
+    const c = this.dados.comunicacao();
+    if (!c) return null;
+    const recorte = this.filtro.recorte();
+    const meses = recorte === null ? c.meses : c.meses.filter((m) => recorte.includes(m.ano));
+    if (!meses.length) return null;
+
+    const nomeMes = (m: { mes: number; ano: number }) => `${MESES_CURTOS[m.mes - 1]}/${m.ano}`;
+    const linhas = c.metricas
+      .map((metrica) => {
+        const valores = meses.map((m) => m.valores[metrica.rotulo] ?? 0);
+        return {
+          metrica: metrica.rotulo,
+          valores: valores.map((v) => (v ? formatQuantidade(v) : '—')),
+          totalNumero: valores.reduce((s, v) => s + v, 0),
+        };
+      })
+      .filter((l) => l.totalNumero > 0)
+      .map((l) => ({ ...l, total: formatQuantidade(l.totalNumero) }));
+
+    return {
+      periodo:
+        meses.length === 1
+          ? nomeMes(meses[0])
+          : `${nomeMes(meses[0])} a ${nomeMes(meses[meses.length - 1])}`,
+      totalMeses: meses.length,
+      colunas: meses.map((m) => MESES_CURTOS[m.mes - 1]),
+      linhas,
     };
   });
 
@@ -337,6 +390,7 @@ export class RelatorioComponent {
         referencia: a.referencia,
       })),
       projecoes: this.projecoes(),
+      comunicacao: this.comunicacao(),
       escala: escala
         ? { meta: escala.meta, projecao: escala.projecao, multiplo: escala.multiplo, nota: escala.nota }
         : null,
@@ -353,7 +407,7 @@ export class RelatorioComponent {
               instituicoes: t.rankingOrgsPorAgentes.length,
               municipios: t.municipios.map((mu) => `${mu.cidade}/${mu.uf}`).join(' · '),
               totalMunicipios: t.municipios.length,
-              mapaSvg: svgDoMapa(mapa, { acento: '#a23b4a', fio: '#d9d1cf', tinta: '#17120f' }),
+              mapaSvg: svgDoMapa(mapa, CORES_PDF),
               estados: this.estados(),
               ranking: this.ranking(),
             }

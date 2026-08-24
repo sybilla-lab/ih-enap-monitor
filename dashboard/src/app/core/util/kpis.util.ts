@@ -1,5 +1,5 @@
 import {
-  ANOS_PARCERIA,
+  anosVisiveis,
   ContagemPorAno,
   EntregasOperacionais,
   Indicador,
@@ -72,7 +72,7 @@ export function kpisDaParceria(
     rotulo: 'Projetos executados',
     valor: formatQuantidade(projetos.valor),
     nota: comSemData('inclui os em execução', projetos.semData),
-    serie: serieDaContagem(entregas?.projetos, formatQuantidade),
+    serie: serieDaContagem(entregas?.projetos, formatQuantidade, ano),
     detalhe: {
       calculo:
         'Contagem de iniciativas distintas registradas nas abas de atividades. Uma iniciativa com várias atividades (oficinas, encontros, etapas) conta uma vez só. O ano vem da data inicial ou final do registro.',
@@ -88,7 +88,7 @@ export function kpisDaParceria(
       valor: formatQuantidade(v.realizado),
       nota: `meta de ${formatQuantidade(v.meta)} · ${rotuloRecorte}`,
       meta: progresso(v.realizado, v.meta),
-      serie: serieDoIndicador(agentes, formatQuantidade),
+      serie: serieDoIndicador(agentes, formatQuantidade, ano),
       detalhe: {
         calculo:
           'Realizado do indicador da Linha I no recorte, comparado à meta pactuada para o mesmo período. Sem recorte, usa o total acumulado (YTD) e a meta total da parceria.',
@@ -105,7 +105,7 @@ export function kpisDaParceria(
       valor: formatQuantidade(v.realizado),
       nota: `meta de ${formatQuantidade(v.meta)} · ${rotuloRecorte}`,
       meta: progresso(v.realizado, v.meta),
-      serie: serieDoIndicador(organizacoes, formatQuantidade),
+      serie: serieDoIndicador(organizacoes, formatQuantidade, ano),
       detalhe: {
         calculo:
           'Realizado do indicador da Linha IV no recorte, comparado à meta do mesmo período. São organizações públicas engajadas em projetos na modalidade customizada.',
@@ -130,7 +130,7 @@ export function kpisDaParceria(
       valor: formatQuantidade(desafios.realizado),
       nota: `customizados, autosserviço e de grande impacto · meta de ${formatQuantidade(desafios.meta)}`,
       meta: progresso(desafios.realizado, desafios.meta),
-      serie: ANOS_PARCERIA.map((a) => {
+      serie: anosVisiveis(ano).map((a) => {
         const valor = indicadoresDeDesafio.reduce(
           (s, ind) => s + (ind.anos.find((x) => x.ano === a)?.realizado ?? 0),
           0,
@@ -169,7 +169,7 @@ export function kpisDaParceria(
     rotulo: 'Soluções geradas',
     valor: formatQuantidade(solucoes.valor),
     nota: comSemData('soluções enviadas aos desafios', solucoes.semData),
-    serie: serieDaContagem(entregas?.solucoes, formatQuantidade),
+    serie: serieDaContagem(entregas?.solucoes, formatQuantidade, ano),
     detalhe: {
       calculo:
         'Soma da coluna "Soluções enviadas" dos desafios da Linha I. Conta o que as equipes submeteram aos desafios — não é o mesmo que o Banco de Soluções, que reúne o ecossistema todo e contém duplicatas declaradas na própria planilha.',
@@ -182,7 +182,7 @@ export function kpisDaParceria(
     rotulo: 'Participantes em desafios',
     valor: formatQuantidade(participantes.valor),
     nota: comSemData('inscritos nos desafios da Linha I', participantes.semData),
-    serie: serieDaContagem(entregas?.participantesDesafios, formatQuantidade),
+    serie: serieDaContagem(entregas?.participantesDesafios, formatQuantidade, ano),
     detalhe: {
       calculo:
         'Soma dos inscritos declarados em cada desafio da Linha I. Registros de atividade sem número de inscritos não entram na conta.',
@@ -199,7 +199,7 @@ export function kpisDaParceria(
       valor: formatQuantidade(Math.round(media * 10) / 10),
       nota: `média consolidada de ${nps.length} indicadores · meta 80`,
       meta: progresso(media, 80),
-      serie: ANOS_PARCERIA.map((a) => {
+      serie: anosVisiveis(ano).map((a) => {
         const doAno = indicadoresNps
           .map((i) => i.anos.find((x) => x.ano === a)?.realizado ?? 0)
           .filter((v) => v > 0);
@@ -234,7 +234,7 @@ export function kpisDaParceria(
     rotulo: 'Valor em premiação',
     valor: formatMoeda(premiacao.valor),
     nota: `pago aos desafios · ${rotuloRecorte}`,
-    serie: serieDaContagem(entregas?.premiacao, formatMoeda),
+    serie: serieDaContagem(entregas?.premiacao, formatMoeda, ano),
     detalhe: {
       calculo:
         'Total geral de premiação por ano, como a própria planilha consolida no resumo da aba — soma dos recursos da União e dos externos.',
@@ -253,7 +253,7 @@ export function kpisDaParceria(
           ? `meta de ${formatMoeda(captacao.metaTotal)} até 2028`
           : `meta de ${formatMoeda(v.meta)} · ${rotuloRecorte}`,
       meta: progresso(v.realizado, ano === null ? captacao.metaTotal : v.meta),
-      serie: serieDoIndicador(captacao, formatMoeda),
+      serie: serieDoIndicador(captacao, formatMoeda, ano),
       destaque: true,
       detalhe: {
         calculo:
@@ -305,16 +305,21 @@ function progresso(realizado: number, meta: number): Kpi['meta'] {
 function serieDaContagem(
   c: ContagemPorAno | undefined,
   formatar: (v: number) => string,
+  recorte: Recorte,
 ): PontoSerie[] {
   if (!c) return [];
-  return ANOS_PARCERIA.map((ano) => {
+  return anosVisiveis(recorte).map((ano) => {
     const valor = c.porAno[ano] ?? 0;
     return { ano, valor, rotulo: valor ? formatar(valor) : '—' };
   });
 }
 
-function serieDoIndicador(ind: Indicador, formatar: (v: number) => string): PontoSerie[] {
-  return ANOS_PARCERIA.map((ano) => {
+function serieDoIndicador(
+  ind: Indicador,
+  formatar: (v: number) => string,
+  recorte: Recorte,
+): PontoSerie[] {
+  return anosVisiveis(recorte).map((ano) => {
     const doAno = ind.anos.find((a) => a.ano === ano);
     const valor = doAno?.realizado ?? 0;
     const meta = doAno?.meta ?? 0;

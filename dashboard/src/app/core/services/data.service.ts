@@ -1,5 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { DadosPainel, PlanilhaInvalidaError, lerPlanilha } from '../data/planilha';
+import { DadosPainel, PlanilhaInvalidaError, VERSAO_DADOS, lerPlanilha } from '../data/planilha';
 
 const CHAVE_SESSAO = 'ih.painel.dados';
 
@@ -23,6 +23,7 @@ export class DataService {
   readonly parceria = computed(() => this.dados()?.parceria ?? null);
   readonly territorio = computed(() => this.dados()?.territorio ?? null);
   readonly entregas = computed(() => this.dados()?.entregas ?? null);
+  readonly comunicacao = computed(() => this.dados()?.comunicacao ?? null);
 
   /** Há dados para exibir? É o que decide entre a tela de carga e o painel. */
   readonly pronto = computed(() => this.dados() !== null);
@@ -79,7 +80,15 @@ export class DataService {
     const bruto = sessionStorage.getItem(CHAVE_SESSAO);
     if (!bruto) return;
     try {
-      this.dados.set(JSON.parse(bruto) as DadosPainel);
+      const guardado = JSON.parse(bruto) as DadosPainel;
+      // Sessão de uma versão anterior do painel não tem os campos que as
+      // páginas novas leem — melhor recarregar a planilha do que abrir
+      // páginas vazias com a fonte certa em mãos.
+      if (guardado.versao !== VERSAO_DADOS) {
+        sessionStorage.removeItem(CHAVE_SESSAO);
+        return;
+      }
+      this.dados.set(guardado);
     } catch {
       sessionStorage.removeItem(CHAVE_SESSAO);
     }

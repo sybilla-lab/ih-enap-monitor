@@ -9,7 +9,7 @@ import { formatPercentual } from '../../../core/util/numero.util';
 
 interface LinhaProgresso {
   id: LinhaAcaoId;
-  nome: string;
+  curto: string;
   rota: string;
   pct: number;
   pctLabel: string;
@@ -40,12 +40,12 @@ const ROTAS: Record<LinhaAcaoId, string> = {
         <a
           class="linha"
           [routerLink]="linha.rota"
-          [title]="'Abrir a página da ' + linha.id + ' — ' + linha.nome"
+          [title]="'Abrir a página da ' + linha.id + ' — ' + linha.curto"
         >
           <span class="linha__cabecalho">
             <span class="linha__nome">
               <strong>{{ linha.id }}</strong>
-              <span>{{ linha.nome }}</span>
+              <span>{{ linha.curto }}</span>
             </span>
             <span class="linha__pct">{{ linha.pctLabel }}</span>
           </span>
@@ -169,7 +169,7 @@ export class MetasLinhaComponent {
       );
       return {
         id: linha.id,
-        nome: linha.nome,
+        curto: linha.curto,
         rota: ROTAS[linha.id],
         pct: c.pct,
         pctLabel: formatPercentual(c.pct),

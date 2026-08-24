@@ -1,8 +1,10 @@
-import { Component, computed, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map, startWith } from 'rxjs';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { NAV_ITEMS } from './nav-items';
+import { NAV_ITEMS, NAV_LINHAS } from './nav-items';
 import { ThemeService } from '../core/services/theme.service';
 import { DataService } from '../core/services/data.service';
 import { GlobalFilterService } from '../core/services/global-filter.service';
@@ -25,7 +27,11 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
   standalone: true,
   imports: [RouterLink, RouterLinkActive, MatIconModule, MatTooltipModule],
   template: `
-    <header class="barra" [class.barra--aberta]="menuAberto()">
+    <header
+      class="barra"
+      [class.barra--aberta]="menuAberto()"
+      [class.barra--submenu]="linhasAbertas()"
+    >
       <div class="barra__vidro">
         <div class="barra__linha">
           <!-- Versão negativa no tema escuro: é o que o brandbook da Enap
@@ -38,14 +44,67 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
           </a>
 
           <nav class="nav" [attr.aria-label]="'Seções do painel'">
-            @for (item of navItems; track item.route) {
+            <a
+              class="nav__item"
+              [routerLink]="navItems[0].route"
+              routerLinkActive="nav__item--ativo"
+              (click)="fecharTudo()"
+            >
+              <mat-icon aria-hidden="true">{{ navItems[0].icon }}</mat-icon>
+              <span>{{ navItems[0].label }}</span>
+            </a>
+            <a
+              class="nav__item"
+              [routerLink]="navItems[1].route"
+              routerLinkActive="nav__item--ativo"
+              (click)="fecharTudo()"
+            >
+              <mat-icon aria-hidden="true">{{ navItems[1].icon }}</mat-icon>
+              <span>{{ navItems[1].label }}</span>
+            </a>
+
+            <!-- As quatro linhas num item só: elas são um grupo, e abertas na
+                 barra empurravam o resto do menu para fora da tela. -->
+            <div class="linhas-menu">
+              <button
+                type="button"
+                class="nav__item nav__item--grupo"
+                [class.nav__item--ativo]="linhaAtiva() !== null"
+                [attr.aria-expanded]="linhasAbertas()"
+                (click)="linhasAbertas.set(!linhasAbertas())"
+              >
+                <mat-icon aria-hidden="true">stacked_line_chart</mat-icon>
+                <span>Linhas{{ linhaAtiva() ? ' · ' + linhaAtiva() : '' }}</span>
+                <mat-icon class="nav__seta" aria-hidden="true">expand_more</mat-icon>
+              </button>
+
+              @if (linhasAbertas()) {
+                <div class="submenu" role="menu">
+                  @for (item of navLinhas; track item.route) {
+                    <a
+                      class="submenu__item"
+                      role="menuitem"
+                      [routerLink]="item.route"
+                      routerLinkActive="submenu__item--ativo"
+                      (click)="fecharTudo()"
+                    >
+                      <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+                      <span class="submenu__texto">
+                        <strong>{{ item.label }}</strong>
+                        <small>{{ item.descricao }}</small>
+                      </span>
+                    </a>
+                  }
+                </div>
+              }
+            </div>
+
+            @for (item of navItems.slice(2); track item.route) {
               <a
                 class="nav__item"
                 [routerLink]="item.route"
                 routerLinkActive="nav__item--ativo"
-                [matTooltip]="item.descricao ?? ''"
-                matTooltipShowDelay="400"
-                (click)="menuAberto.set(false)"
+                (click)="fecharTudo()"
               >
                 <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
                 <span>{{ item.label }}</span>
@@ -167,7 +226,13 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
         box-shadow:
           inset 0 1px 0 color-mix(in srgb, #fff 22%, transparent),
           0 12px 34px light-dark(rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.45));
+        // Recorta a gaveta do filtro nos cantos arredondados. Some quando o
+        // submenu das linhas abre, senão o painel é cortado pela própria barra.
         overflow: hidden;
+      }
+
+      &--submenu &__vidro {
+        overflow: visible;
       }
 
       &__linha {
@@ -222,11 +287,14 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
         align-items: center;
         gap: 6px;
         padding: 8px 12px;
+        border: none;
         border-radius: 999px;
+        background: transparent;
         text-decoration: none;
         color: var(--mat-sys-on-surface-variant);
         font: var(--mat-sys-label-large);
         white-space: nowrap;
+        cursor: pointer;
         transition: background 140ms ease, color 140ms ease;
 
         mat-icon {
@@ -246,6 +314,13 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
           color: #ffffff;
           font-weight: 600;
         }
+      }
+
+      &__seta {
+        font-size: 17px;
+        width: 17px;
+        height: 17px;
+        opacity: 0.8;
       }
 
       // Em telas médias, só os ícones — o rótulo vira tooltip.
@@ -402,6 +477,84 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
 
     }
 
+    // Submenu das linhas: painel ancorado no item, no mesmo vidro da barra.
+    .linhas-menu {
+      position: relative;
+    }
+
+    .submenu {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      width: max-content;
+      max-width: min(340px, 90vw);
+      padding: 8px;
+      border: 1px solid color-mix(in srgb, var(--mat-sys-outline) 30%, transparent);
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--mat-sys-surface) 94%, transparent);
+      backdrop-filter: blur(18px) saturate(1.4);
+      box-shadow: 0 16px 40px light-dark(rgb(0 0 0 / 0.16), rgb(0 0 0 / 0.5));
+
+      &__item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 12px;
+        text-decoration: none;
+        color: inherit;
+        transition: background 140ms ease;
+
+        mat-icon {
+          flex: none;
+          margin-top: 1px;
+          font-size: 19px;
+          width: 19px;
+          height: 19px;
+          color: var(--mat-sys-on-surface-variant);
+        }
+
+        &:hover,
+        &:focus-visible {
+          background: color-mix(in srgb, var(--app-viz-accent) 12%, transparent);
+        }
+
+        &--ativo {
+          background: var(--app-verde-enap);
+
+          mat-icon,
+          small {
+            color: color-mix(in srgb, #ffffff 78%, transparent);
+          }
+
+          strong {
+            color: #ffffff;
+          }
+        }
+      }
+
+      &__texto {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.3;
+
+        strong {
+          font: var(--mat-sys-label-large);
+          font-weight: 600;
+        }
+
+        small {
+          font: var(--mat-sys-body-small);
+          color: var(--mat-sys-on-surface-variant);
+        }
+      }
+    }
+
     // No celular a barra vira uma linha só e o menu abre embaixo dela.
     @media (max-width: 1023px) {
       .nav {
@@ -440,12 +593,51 @@ import { FiltroEscopoService } from '../core/services/filtro-escopo.service';
 })
 export class TopbarComponent {
   readonly navItems = NAV_ITEMS;
+  readonly navLinhas = NAV_LINHAS;
   readonly theme = inject(ThemeService);
   readonly dados = inject(DataService);
   readonly filtro = inject(GlobalFilterService);
   readonly escopo = inject(FiltroEscopoService);
 
   readonly menuAberto = signal(false);
+  readonly linhasAbertas = signal(false);
+
+  private router = inject(Router);
+
+  /** Numeral da linha aberta ("II"), para o item do grupo dizer onde se está. */
+  readonly linhaAtiva = toSignal(
+    this.router.events.pipe(
+      filter((e) => e instanceof NavigationEnd),
+      startWith(null),
+      map(() => {
+        // Comparação exata, não por prefixo: "/linha-iv".startsWith("/linha-i")
+        // é verdadeiro, e o menu marcava a Linha I em todas as outras.
+        const caminho = this.router.url.split(/[?#]/)[0];
+        const item = NAV_LINHAS.find((l) => caminho === l.route);
+        return item ? item.label.replace('Linha ', '') : null;
+      }),
+    ),
+    { initialValue: null },
+  );
+
+  /** Fecha submenu e menu móvel ao navegar. */
+  fecharTudo(): void {
+    this.linhasAbertas.set(false);
+    this.menuAberto.set(false);
+  }
+
+  /** Clique fora ou Esc fecham o submenu das linhas. */
+  @HostListener('document:click', ['$event'])
+  aoClicarFora(evento: MouseEvent): void {
+    if (!this.linhasAbertas()) return;
+    const alvo = evento.target as HTMLElement;
+    if (!alvo.closest('.linhas-menu')) this.linhasAbertas.set(false);
+  }
+
+  @HostListener('document:keydown.escape')
+  aoApertarEsc(): void {
+    this.linhasAbertas.set(false);
+  }
 
   readonly logoEnap = computed(() =>
     this.theme.mode() === 'dark' ? 'logos/enap-negativa.png' : 'logos/enap.png',

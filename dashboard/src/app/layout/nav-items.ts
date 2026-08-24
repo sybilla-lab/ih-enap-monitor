@@ -9,9 +9,8 @@ export interface NavItem {
 // Fonte única dos itens do menu lateral. A ordem é a da leitura pretendida:
 // panorama, progresso consolidado, cada linha de ação, alcance e o documento.
 // Nomes longos ficam em duas linhas (rótulo + descrição) em vez de truncados.
-export const NAV_ITEMS: NavItem[] = [
-  { label: 'Home', icon: 'home', route: '/home' },
-  { label: 'Progresso das Metas', icon: 'track_changes', route: '/progresso' },
+/** As quatro linhas de ação: um grupo só no menu, aberto num submenu. */
+export const NAV_LINHAS: NavItem[] = [
   {
     label: 'Linha I',
     descricao: 'Projetos de inovação aberta',
@@ -36,6 +35,15 @@ export const NAV_ITEMS: NavItem[] = [
     icon: 'trending_up',
     route: '/linha-iv',
   },
+];
+
+// Oito itens não cabem numa barra horizontal sem virar sopa de letrinhas: as
+// quatro linhas de ação — que são um grupo, e não quatro seções soltas — ficam
+// atrás de um item só, com submenu.
+export const NAV_ITEMS: NavItem[] = [
+  { label: 'Home', icon: 'home', route: '/home' },
+  { label: 'Progresso das Metas', icon: 'track_changes', route: '/progresso' },
+  { label: 'Comunicação', icon: 'campaign', route: '/comunicacao' },
   { label: 'Impacto Territorial', icon: 'public', route: '/territorio' },
   { label: 'Relatório Executivo', icon: 'description', route: '/relatorio' },
 ];

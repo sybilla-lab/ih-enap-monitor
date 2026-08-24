@@ -1,0 +1,304 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.estado-vazio {
+  padding: 24px;
+
+  h2 {
+    margin: 0 0 8px;
+    font: var(--mat-sys-title-large);
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.bloco {
+  padding: 24px;
+
+  &__titulo {
+    margin: 0;
+    font: var(--mat-sys-title-large);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  &__subtitulo {
+    margin: 4px 0 20px;
+    max-width: 74ch;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.series {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 28px 32px;
+}
+
+.serie {
+  margin: 0;
+
+  &__cabecalho {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+
+  &__nome {
+    font: var(--mat-sys-title-small);
+    font-weight: 600;
+  }
+
+  &__numeros {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+
+    strong {
+      font: var(--mat-sys-title-small);
+      font-weight: 700;
+      color: var(--app-viz-accent);
+    }
+
+    span {
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+
+  &__grafico {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    margin-top: 14px;
+  }
+}
+
+// Coluna do mês: valor em cima, barra proporcional, rótulo embaixo.
+.coluna {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+
+  &__valor {
+    font: var(--mat-sys-body-small);
+    font-variant-numeric: tabular-nums;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__barra {
+    display: flex;
+    align-items: flex-end;
+    width: 100%;
+    height: 76px;
+    border-radius: 5px 5px 0 0;
+    background: color-mix(in srgb, var(--app-viz-neutral) 16%, transparent);
+  }
+
+  &__fill {
+    width: 100%;
+    min-height: 2px;
+    border-radius: 5px 5px 0 0;
+    background: var(--app-viz-accent);
+  }
+
+  &__mes {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// Seletor de métrica: chips numa linha, o mesmo gesto do filtro de anos.
+.seletor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 24px;
+
+  &__opcao {
+    padding: 6px 14px;
+    border: 1px solid color-mix(in srgb, var(--mat-sys-outline) 26%, transparent);
+    border-radius: 999px;
+    background: transparent;
+    font: var(--mat-sys-label-large);
+    color: var(--mat-sys-on-surface-variant);
+    cursor: pointer;
+    transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--app-viz-accent);
+      color: var(--mat-sys-on-surface);
+    }
+
+    &--ativa {
+      background: var(--app-viz-accent);
+      border-color: transparent;
+      color: #ffffff;
+      font-weight: 600;
+    }
+  }
+}
+
+.foco {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__numeros {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px 24px;
+    margin: 0;
+
+    dt {
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-on-surface-variant);
+    }
+
+    dd {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin: 3px 0 0;
+      font: var(--mat-sys-title-medium);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+
+      small {
+        font: var(--mat-sys-body-small);
+        font-weight: 400;
+        color: var(--mat-sys-on-surface-variant);
+      }
+    }
+  }
+
+  // Variação é texto, não cor sozinha: a seta e a palavra dizem o mesmo.
+  &__variacao {
+    font: var(--mat-sys-body-medium) !important;
+    font-weight: 500 !important;
+
+    &--sobe::before {
+      content: '▲';
+      font-size: 10px;
+      color: var(--app-viz-accent);
+    }
+
+    &--desce::before {
+      content: '▼';
+      font-size: 10px;
+      color: var(--mat-sys-on-surface-variant);
+    }
+  }
+}
+
+// Proporção preservada: com preserveAspectRatio="none" o texto e os pontos
+// esticavam junto com a largura.
+.linha-grafico {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  overflow: visible;
+
+  &__grade {
+    stroke: color-mix(in srgb, var(--mat-sys-outline) 24%, transparent);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  &__area {
+    fill: color-mix(in srgb, var(--app-viz-accent) 12%, transparent);
+  }
+
+  &__linha {
+    fill: none;
+    stroke: var(--app-viz-accent);
+    stroke-width: 2.5;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  &__ponto {
+    fill: var(--app-viz-accent);
+
+    &--melhor {
+      fill: var(--mat-sys-surface);
+      stroke: var(--app-viz-accent);
+      stroke-width: 3;
+      vector-effect: non-scaling-stroke;
+    }
+  }
+
+  &__valor,
+  &__mes {
+    fill: var(--mat-sys-on-surface-variant);
+    font-family: Roboto, sans-serif;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__valor {
+    fill: var(--mat-sys-on-surface);
+    font-weight: 600;
+  }
+}
+
+// Muitas métricas: a tabela rola dentro do card em vez de estourar a página.
+.rolagem {
+  overflow-x: auto;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--mat-sys-body-small);
+
+  th {
+    padding: 8px 14px 8px 0;
+    border-bottom: 1px solid var(--mat-sys-on-surface);
+    text-align: left;
+    font-weight: 600;
+    color: var(--mat-sys-on-surface-variant);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 8px 14px 8px 0;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    white-space: nowrap;
+  }
+
+  &__num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  tfoot td {
+    border-bottom: none;
+    border-top: 1px solid var(--mat-sys-on-surface);
+    font-weight: 700;
+  }
+}
+
+.fonte {
+  margin: 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
