@@ -4,6 +4,16 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { DataService } from '../../core/services/data.service';
 import { GlobalFilterService } from '../../core/services/global-filter.service';
 import { formatQuantidade } from '../../core/util/numero.util';
+import { StatTileComponent } from '../../shared/components/stat-tile/stat-tile.component';
+
+/** Ícone conforme o que a métrica mede — cai num genérico quando não reconhece. */
+function iconeDaMetrica(rotulo: string): string {
+  if (/blog|conte[úu]do/i.test(rotulo)) return 'article';
+  if (/visualiza/i.test(rotulo)) return 'visibility';
+  if (/usu[áa]rio/i.test(rotulo)) return 'group';
+  if (/arte/i.test(rotulo)) return 'palette';
+  return 'insights';
+}
 
 const MESES = [
   'jan', 'fev', 'mar', 'abr', 'mai', 'jun',
@@ -28,7 +38,7 @@ interface SerieMensal {
 @Component({
   selector: 'app-comunicacao',
   standalone: true,
-  imports: [MatIconModule, MatProgressBarModule],
+  imports: [MatIconModule, MatProgressBarModule, StatTileComponent],
   templateUrl: './comunicacao.component.html',
   styleUrl: './comunicacao.component.scss',
 })
@@ -90,7 +100,11 @@ export class ComunicacaoComponent {
       .map(({ total_, ...s }) => s);
   });
 
-  /** As quatro métricas de maior volume viram os números do topo. */
+  /**
+   * As três métricas de maior volume viram cards no topo, ao lado do período —
+   * o mesmo formato usado no Impacto Territorial, para as páginas do painel
+   * abrirem do mesmo jeito.
+   */
   readonly destaques = computed(() => {
     const meses = this.mesesDoRecorte();
     const metricas = this.comunicacao()?.metricas ?? [];
@@ -101,8 +115,12 @@ export class ComunicacaoComponent {
       }))
       .filter((m) => m.valor > 0)
       .sort((a, b) => b.valor - a.valor)
-      .slice(0, 4)
-      .map((m) => ({ rotulo: m.rotulo, valor: formatQuantidade(m.valor) }));
+      .slice(0, 3)
+      .map((m) => ({
+        rotulo: m.rotulo,
+        valor: formatQuantidade(m.valor),
+        icone: iconeDaMetrica(m.rotulo),
+      }));
   });
 
   // ------------------------------------------------ leitura em detalhe ----

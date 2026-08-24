@@ -25,20 +25,23 @@
         </p>
       </section>
     } @else {
-      <dl class="app-ledger" aria-label="Destaques de comunicação">
-        <div class="app-ledger__item">
-          <dt class="app-ledger__rotulo">Período coberto</dt>
-          <dd class="app-ledger__valor">{{ periodo() }}</dd>
-          <dd class="app-ledger__nota">{{ tabela().linhas.length }} meses com registro</dd>
-        </div>
+      <section class="kpis" aria-label="Destaques de comunicação">
+        <app-stat-tile
+          label="Período coberto"
+          [value]="periodo()"
+          [hint]="tabela().linhas.length + ' meses com registro'"
+          icon="calendar_month"
+          tone="accent"
+        />
         @for (d of destaques(); track d.rotulo) {
-          <div class="app-ledger__item">
-            <dt class="app-ledger__rotulo">{{ d.rotulo }}</dt>
-            <dd class="app-ledger__valor">{{ d.valor }}</dd>
-            <dd class="app-ledger__nota">no período</dd>
-          </div>
+          <app-stat-tile
+            [label]="d.rotulo"
+            [value]="d.valor"
+            hint="no período"
+            [icon]="d.icone"
+          />
         }
-      </dl>
+      </section>
 
       <section class="app-card bloco">
         <h2 class="bloco__titulo">Mês a mês</h2>

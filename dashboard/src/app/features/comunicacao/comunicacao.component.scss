@@ -20,6 +20,12 @@
   }
 }
 
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
 .bloco {
   padding: 24px;
 
