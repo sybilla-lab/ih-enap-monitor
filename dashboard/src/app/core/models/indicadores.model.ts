@@ -46,6 +46,21 @@ export const LINHAS_ACAO: LinhaAcao[] = [
 export const ANOS_PARCERIA = [2024, 2025, 2026, 2027, 2028] as const;
 
 /**
+ * Indicadores pactuados no Plano Complementar, e não no plano original.
+ *
+ * A planilha não tem coluna para isso — a distinção veio do cliente, por nome
+ * do indicador. Se a fonte passar a marcar, é este ponto que muda.
+ */
+const PLANO_COMPLEMENTAR = [
+  /Realiza[çc][ãa]o de oficinas conforme metodologias/i,
+  /Participa[çc][ãa]o na Semana de Inova[çc][ãa]o/i,
+];
+
+export function ehPlanoComplementar(nomeDoIndicador: string): boolean {
+  return PLANO_COMPLEMENTAR.some((padrao) => padrao.test(nomeDoIndicador));
+}
+
+/**
  * Anos que valem a pena exibir numa série: os que já começaram, mais qualquer
  * ano que o filtro tenha selecionado explicitamente.
  *

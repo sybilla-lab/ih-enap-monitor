@@ -10,6 +10,7 @@ import {
   LINHAS_ACAO,
   LinhaAcao,
   anosVisiveis,
+  ehPlanoComplementar,
 } from '../../core/models/indicadores.model';
 import { cumprimento, valoresDoRecorte } from '../../core/util/agregacao.util';
 import { formatMoeda, formatPercentual, formatQuantidade } from '../../core/util/numero.util';
@@ -88,6 +89,7 @@ export class LinhaComponent {
         pct: razao === null ? 0 : Math.min(razao * 100, 100),
         pctLabel: razao === null ? '—' : formatPercentual(Math.min(razao * 100, 100)),
         atingido: razao !== null && razao >= 1,
+        planoComplementar: ehPlanoComplementar(ind.nome),
         anos: anosDaSerie.map((ano) => {
           // Cada coluna é sempre o ano dela, independente do filtro — o recorte
           // muda o destaque, não o que a série mostra.

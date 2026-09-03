@@ -67,18 +67,9 @@ export function kpisDaParceria(
 ): Kpi[] {
   const lista: Kpi[] = [];
 
-  const projetos = contagemDoRecorte(entregas?.projetos, ano);
-  lista.push({
-    rotulo: 'Projetos executados',
-    valor: formatQuantidade(projetos.valor),
-    nota: comSemData('inclui os em execução', projetos.semData),
-    serie: serieDaContagem(entregas?.projetos, formatQuantidade, ano),
-    detalhe: {
-      calculo:
-        'Contagem de iniciativas distintas registradas nas abas de atividades. Uma iniciativa com várias atividades (oficinas, encontros, etapas) conta uma vez só. O ano vem da data inicial ou final do registro.',
-      fonte: 'Abas "Linha I Desafios", "Linha II Aceleracao" e "Linha III - Comunidade e Cultura"',
-    },
-  });
+  // "Projetos executados" saiu da lista a pedido do cliente. A contagem
+  // continua sendo extraída da planilha (entregas.projetos) — se voltar, é só
+  // reinserir o card aqui.
 
   const agentes = indicadores.find((i) => /agentes públicos/i.test(i.nome));
   if (agentes) {

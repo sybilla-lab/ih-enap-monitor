@@ -24,6 +24,8 @@ export interface IndicadorApresentado {
   pct: number;
   pctLabel: string;
   atingido: boolean;
+  /** Indicador pactuado no Plano Complementar, e não no plano original. */
+  planoComplementar: boolean;
   anos: AnoDoIndicador[];
 }
 
@@ -42,7 +44,12 @@ export interface IndicadorApresentado {
   template: `
     <article class="ind">
       <header class="ind__cabecalho">
-        <h3 class="ind__nome">{{ dados().nome }}</h3>
+        <h3 class="ind__nome">
+          {{ dados().nome }}
+          @if (dados().planoComplementar) {
+            <span class="ind__plano">Plano Complementar</span>
+          }
+        </h3>
         <span class="ind__unidade">{{ dados().unidade }}</span>
       </header>
 
@@ -106,6 +113,22 @@ export interface IndicadorApresentado {
         margin: 0;
         font: var(--mat-sys-body-medium);
         font-weight: 500;
+      }
+
+      // Selo do Plano Complementar: acompanha o nome, na mesma linha de texto,
+      // para ficar claro que qualifica aquele indicador e não o card inteiro.
+      &__plano {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid color-mix(in srgb, var(--app-viz-accent) 45%, transparent);
+        background: color-mix(in srgb, var(--app-viz-accent) 10%, transparent);
+        color: var(--app-viz-accent);
+        font: var(--mat-sys-body-small);
+        font-weight: 600;
+        white-space: nowrap;
+        vertical-align: middle;
       }
 
       &__unidade {
