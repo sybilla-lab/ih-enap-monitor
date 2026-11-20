@@ -1,0 +1,289 @@
+.pagina {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.estado-vazio {
+  padding: 24px;
+
+  h2 {
+    margin: 0 0 8px;
+    font: var(--mat-sys-title-large);
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    max-width: 68ch;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+// Os quatro agrupamentos lado a lado: são leituras curtas e independentes,
+// empilhá-las obrigaria a rolar a página para comparar duas.
+.blocos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  // Cada card tem a altura da própria lista: esticar os quatro até a altura do
+  // mais alto (o de estados, com dez linhas) deixava metade de dois deles vazia.
+  align-items: start;
+  gap: 16px;
+}
+
+.bloco {
+  padding: 22px 24px;
+
+  &__titulo {
+    margin: 0;
+    font: var(--mat-sys-title-large);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  &__subtitulo {
+    margin: 4px 0 18px;
+    max-width: 74ch;
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// Ranking: rótulo e número na mesma linha, barra embaixo ocupando a largura.
+// Barra deitada e não coluna porque os rótulos são textos longos (nomes de
+// edital, de estado, de área) que não cabem embaixo de uma coluna estreita.
+.ranking {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2px 12px;
+  }
+
+  &__rotulo {
+    font: var(--mat-sys-body-small);
+    color: var(--mat-sys-on-surface);
+  }
+
+  &__valor {
+    font: var(--mat-sys-body-small);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--app-viz-accent);
+  }
+
+  &__barra {
+    grid-column: 1 / -1;
+    display: block;
+    height: 6px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--app-viz-neutral) 16%, transparent);
+    overflow: hidden;
+  }
+
+  &__fill {
+    display: block;
+    height: 100%;
+    min-width: 2px;
+    border-radius: 3px;
+    background: var(--app-viz-accent);
+  }
+}
+
+.lista {
+  &__cabecalho {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  &__contagem {
+    flex: none;
+    padding-top: 4px;
+    font: var(--mat-sys-title-small);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--app-viz-accent);
+  }
+}
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+
+  &__grupo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+
+    &--busca {
+      margin-top: 4px;
+    }
+  }
+
+  &__rotulo {
+    margin-right: 4px;
+    font: var(--mat-sys-label-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+// Mesmo gesto do filtro de anos no topo e do seletor de métrica da Comunicação.
+.chip {
+  padding: 6px 14px;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline) 26%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  font: var(--mat-sys-label-large);
+  color: var(--mat-sys-on-surface-variant);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--app-viz-accent);
+    color: var(--mat-sys-on-surface);
+  }
+
+  &--ativo {
+    background: var(--app-viz-accent);
+    border-color: transparent;
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  &--limpar {
+    border-style: dashed;
+  }
+}
+
+.busca {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 280px;
+  padding: 6px 14px;
+  border: 1px solid color-mix(in srgb, var(--mat-sys-outline) 26%, transparent);
+  border-radius: 999px;
+
+  &:focus-within {
+    border-color: var(--app-viz-accent);
+  }
+
+  mat-icon {
+    flex: none;
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &__campo {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: var(--mat-sys-body-medium);
+
+    &:focus {
+      outline: none;
+    }
+  }
+}
+
+// A lista inteira tem centenas de linhas: rola dentro do card, com o cabeçalho
+// preso no topo, em vez de empurrar o rodapé da página para longe.
+.rolagem {
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.tabela {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--mat-sys-body-small);
+
+  th {
+    padding: 8px 14px 8px 0;
+    text-align: left;
+    font-weight: 600;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid var(--mat-sys-on-surface);
+    background: var(--mat-sys-surface);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 8px 14px 8px 0;
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    vertical-align: top;
+  }
+
+  tbody th {
+    border-bottom: 1px solid var(--mat-sys-outline-variant);
+    font-weight: 500;
+    color: var(--mat-sys-on-surface);
+    vertical-align: top;
+  }
+
+  &__nome {
+    min-width: 200px;
+  }
+
+  &__desafio {
+    max-width: 320px;
+  }
+
+  &__uf {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--app-viz-accent) 12%, transparent);
+    color: var(--app-viz-accent);
+    font-size: 10px;
+    font-weight: 700;
+  }
+
+  &__num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__vazia {
+    padding: 20px 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.fonte {
+  margin: 0;
+  max-width: 90ch;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

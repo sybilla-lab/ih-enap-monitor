@@ -1,5 +1,6 @@
 import {
   anosVisiveis,
+  BancoSolucoes,
   ContagemPorAno,
   EntregasOperacionais,
   Indicador,
@@ -46,8 +47,16 @@ export interface Kpi {
   detalhe: KpiDetalhe;
 }
 
+/** As fontes que os KPIs leem — cada uma de uma aba diferente da planilha. */
+export interface FontesDosKpis {
+  indicadores: Indicador[];
+  entregas: EntregasOperacionais | null;
+  solucoes: BancoSolucoes | null;
+  parceria: ParceriaResumo | null;
+}
+
 /**
- * Os dez indicadores-chave da parceria, na ordem definida com o cliente.
+ * Os indicadores-chave da parceria, na ordem definida com o cliente.
  *
  * Vive aqui, e não na Home, porque o Relatório Executivo precisa exatamente da
  * mesma lista: se cada tela montasse a sua, um dia o PDF diria um número e a
@@ -59,12 +68,11 @@ export interface Kpi {
  * não enfeite — é o que dá relevo ao card sem inventar cor nova.
  */
 export function kpisDaParceria(
-  indicadores: Indicador[],
-  entregas: EntregasOperacionais | null,
-  parceria: ParceriaResumo | null,
+  fontes: FontesDosKpis,
   ano: Recorte,
   rotuloRecorte: string,
 ): Kpi[] {
+  const { indicadores, entregas, solucoes: banco, parceria } = fontes;
   const lista: Kpi[] = [];
 
   // "Projetos executados" saiu da lista a pedido do cliente. A contagem
@@ -105,81 +113,65 @@ export function kpisDaParceria(
     });
   }
 
-  const indicadoresDeDesafio = indicadores.filter(
-    (i) => i.unidade === 'quantidade' && /desafio/i.test(i.nome),
+  // Só a modalidade customizada (revisão 04). Antes o card somava as três
+  // modalidades de desafio; autosserviço e grande impacto são contratos
+  // diferentes e misturá-los inflava o número que o cliente usa para falar da
+  // parceria. As outras duas continuam visíveis na página da Linha I.
+  const customizados = indicadores.find(
+    (i) => i.unidade === 'quantidade' && /desafios customizados/i.test(i.nome),
   );
-  const desafios = indicadoresDeDesafio.reduce(
-    (acc, ind) => {
-      const v = valoresDoRecorte(ind, ano);
-      return { meta: acc.meta + v.meta, realizado: acc.realizado + v.realizado };
-    },
-    { meta: 0, realizado: 0 },
-  );
-  if (desafios.meta > 0 || desafios.realizado > 0) {
+  if (customizados) {
+    const v = valoresDoRecorte(customizados, ano);
     lista.push({
-      rotulo: 'Desafios realizados',
-      valor: formatQuantidade(desafios.realizado),
-      nota: `customizados, autosserviço e de grande impacto · meta de ${formatQuantidade(desafios.meta)}`,
-      meta: progresso(desafios.realizado, desafios.meta),
-      serie: anosVisiveis(ano).map((a) => {
-        const valor = indicadoresDeDesafio.reduce(
-          (s, ind) => s + (ind.anos.find((x) => x.ano === a)?.realizado ?? 0),
-          0,
-        );
-        const meta = indicadoresDeDesafio.reduce(
-          (s, ind) => s + (ind.anos.find((x) => x.ano === a)?.meta ?? 0),
-          0,
-        );
-        return {
-          ano: a,
-          valor,
-          meta,
-          rotulo: formatQuantidade(valor),
-          rotuloMeta: formatQuantidade(meta),
-        };
-      }),
+      rotulo: 'Desafios customizados lançados',
+      valor: formatQuantidade(v.realizado),
+      nota: `meta de ${formatQuantidade(v.meta)} · ${rotuloRecorte}`,
+      meta: progresso(v.realizado, v.meta),
+      serie: serieDoIndicador(customizados, formatQuantidade, ano),
       detalhe: {
         calculo:
-          'Soma dos indicadores de desafios da aba Metas no recorte. São três modalidades distintas, contadas juntas porque a pergunta do cliente é "quantos desafios a parceria já realizou".',
-        fonte: 'Aba "Metas", Linha I',
-        composicaoTitulo: 'Somados neste número',
-        composicao: indicadoresDeDesafio.map((ind) => {
-          const v = valoresDoRecorte(ind, ano);
-          return {
-            rotulo: ind.nome.trim(),
-            valor: formatQuantidade(v.realizado),
-            nota: v.meta > 0 ? `meta de ${formatQuantidade(v.meta)}` : 'sem meta no recorte',
-          };
-        }),
+          'Realizado do indicador "Número de desafios customizados" da Linha I no recorte, contra a meta do mesmo período. Conta apenas a modalidade customizada: desafios de autosserviço da Plataforma Desafios e desafios de grande impacto são metas próprias e aparecem na página da Linha I.',
+        fonte: `Aba "Metas", indicador "${customizados.nome.trim()}"`,
       },
     });
   }
 
-  const solucoes = contagemDoRecorte(entregas?.solucoes, ano);
-  lista.push({
-    rotulo: 'Soluções geradas',
-    valor: formatQuantidade(solucoes.valor),
-    nota: comSemData('soluções enviadas aos desafios', solucoes.semData),
-    serie: serieDaContagem(entregas?.solucoes, formatQuantidade, ano),
-    detalhe: {
-      calculo:
-        'Soma da coluna "Soluções enviadas" dos desafios da Linha I. Conta o que as equipes submeteram aos desafios — não é o mesmo que o Banco de Soluções, que reúne o ecossistema todo e contém duplicatas declaradas na própria planilha.',
-      fonte: 'Aba "Linha I Desafios", coluna "SOLUÇÕES ENVIADAS"',
-    },
-  });
+  // Soluções e participantes vêm da aba "Soluções" (revisão 04), que é o
+  // cadastro que o cliente acompanha. Ela não tem data: os dois números são o
+  // acumulado do banco e não respondem ao recorte por ano — a nota diz isso,
+  // em vez de o card mudar de valor sem o leitor entender por quê.
+  if (banco && banco.solucoes.length) {
+    const projetos = new Set(banco.solucoes.map((s) => s.projeto));
+    lista.push({
+      rotulo: 'Soluções geradas',
+      valor: formatQuantidade(banco.solucoes.length),
+      nota: 'soluções inscritas nos desafios · acumulado do banco',
+      detalhe: {
+        calculo:
+          'Uma linha por solução na aba "Soluções" — o cadastro de tudo que o ecossistema submeteu aos desafios da parceria. A aba não traz data de inscrição, então o número é sempre o acumulado do banco: o filtro de ano não o altera.',
+        fonte: 'Aba "Soluções", coluna "Nome do projeto/solução"',
+        composicaoTitulo: 'Por projeto de origem',
+        composicao: [...projetos]
+          .map((projeto) => ({
+            projeto,
+            quantas: banco.solucoes.filter((s) => s.projeto === projeto).length,
+          }))
+          .sort((a, b) => b.quantas - a.quantas)
+          .map((p) => ({ rotulo: p.projeto, valor: formatQuantidade(p.quantas) })),
+      },
+    });
 
-  const participantes = contagemDoRecorte(entregas?.participantesDesafios, ano);
-  lista.push({
-    rotulo: 'Participantes em desafios',
-    valor: formatQuantidade(participantes.valor),
-    nota: comSemData('inscritos nos desafios da Linha I', participantes.semData),
-    serie: serieDaContagem(entregas?.participantesDesafios, formatQuantidade, ano),
-    detalhe: {
-      calculo:
-        'Soma dos inscritos declarados em cada desafio da Linha I. Registros de atividade sem número de inscritos não entram na conta.',
-      fonte: 'Aba "Linha I Desafios", coluna "TOTAL DE PARTICIPANTES INSCRITOS"',
-    },
-  });
+    lista.push({
+      rotulo: 'Participantes em desafios',
+      valor: formatQuantidade(banco.participantes),
+      nota: 'pessoas nas equipes das soluções · acumulado do banco',
+      detalhe: {
+        calculo:
+          'Pessoas distintas nas equipes responsáveis pelas soluções da aba "Soluções". A mesma equipe se inscreve em mais de um desafio, então a contagem é por pessoa (chave: o e-mail, ou o nome quando não há e-mail) e não por linha da planilha. Como a aba não tem data, o número é o acumulado do banco e não responde ao filtro de ano.',
+        fonte: 'Aba "Soluções", colunas "Responsável" e "E-mail"',
+      },
+    });
+  }
 
   const indicadoresNps = indicadores.filter((i) => i.unidade === 'nps');
   const nps = indicadoresNps.map((i) => valoresDoRecorte(i, ano).realizado).filter((v) => v > 0);
@@ -322,9 +314,4 @@ function serieDoIndicador(
       rotuloMeta: meta ? formatar(meta) : undefined,
     };
   });
-}
-
-/** Registros sem data ficam fora do recorte anual; a nota diz quantos são. */
-function comSemData(base: string, semData: number): string {
-  return semData > 0 ? `${base} · ${formatQuantidade(semData)} sem data` : base;
 }

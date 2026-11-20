@@ -40,12 +40,19 @@ posição (linhas ou colunas em branco a mais) não quebram o painel.
 |---|---|
 | `Metas` | indicadores por linha de ação, metas e realizados de 2024 a 2028 |
 | `Parceria` | aportes anuais, valor captado, ROI, meta global de desafios |
+| `Soluções` (exportada como `BANCO DE SOLUÇÕES CRM`) | página de Soluções e os KPIs de soluções e participantes da Home |
+| `LIII - Eventos, oficinas e SI + NPS` | bloco de eventos da Linha III: eventos, inscrições, participantes e NPS |
+| `Comunicação - Números` | página de Comunicação, uma série por coluna da aba |
 | `Linha I Desafios` · `Linha II Aceleracao` | alcance por estado (coluna `ESTADOS`) |
 | `LI - Agentes Públicos` | agentes públicos engajados, por instituição e ano |
 | `LIV - Organizações públicas` | organizações engajadas, nível federativo e ano |
+| `LIV - Premiação` | valor pago em premiação, por ano |
 
-Só `Metas` e `Parceria` são obrigatórias; sem as demais, a página de Impacto Territorial fica
-vazia. **Nome e e-mail das pessoas não são lidos** — o painel conta agentes, não os identifica.
+Só `Metas` e `Parceria` são obrigatórias; sem as demais, as páginas correspondentes ficam vazias.
+**Nome e e-mail das pessoas não são lidos** — o painel conta pessoas, não as identifica.
+
+A aba `Soluções` não tem coluna de data: os dois KPIs que saem dela são o acumulado do banco e não
+respondem ao filtro de ano, e a página de Soluções não oferece esse recorte.
 
 ## Estrutura
 
@@ -58,8 +65,12 @@ dashboard/src/app/
 │   └── util/                   números, cores e agregações
 ├── features/
 │   ├── carregar/               tela de carga da planilha
-│   ├── home/                   visão executiva e avanço rumo a 2028
-│   ├── retorno/                alavancagem, captação e simulador
+│   ├── home/                   resultados da parceria em KPIs auditáveis
+│   ├── progresso/              cumprimento das metas e avanço rumo a 2028
+│   ├── linha/                  uma página por linha de ação (eventos na Linha III,
+│   │                           retorno e alavancagem na Linha IV)
+│   ├── solucoes/               banco de soluções: origem, estágio, estado e áreas
+│   ├── comunicacao/            métricas mensais de comunicação
 │   ├── territorio/             cartograma, organizações e detalhe por estado
 │   └── relatorio/              relatório executivo em documento, para virar PDF
 ├── shared/components/          dock de filtros e stat tile

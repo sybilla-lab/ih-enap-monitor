@@ -249,10 +249,13 @@ import { Kpi } from '../../../core/util/kpis.util';
       }
     }
 
-    // Série do ano: trilho claro é a meta, barra cheia é o realizado.
+    // Série do ano: trilho claro é a meta, barra cheia é o realizado. As
+    // colunas se dividem pelos anos que a série traz — fixar cinco deixava um
+    // vão à direita desde que os anos futuros zerados saíram da série.
     .serie {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
       gap: 10px;
     }
 

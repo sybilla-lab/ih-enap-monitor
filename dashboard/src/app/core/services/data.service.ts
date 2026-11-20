@@ -24,6 +24,8 @@ export class DataService {
   readonly territorio = computed(() => this.dados()?.territorio ?? null);
   readonly entregas = computed(() => this.dados()?.entregas ?? null);
   readonly comunicacao = computed(() => this.dados()?.comunicacao ?? null);
+  readonly solucoes = computed(() => this.dados()?.solucoes ?? null);
+  readonly eventos = computed(() => this.dados()?.eventos ?? []);
 
   /** Há dados para exibir? É o que decide entre a tela de carga e o painel. */
   readonly pronto = computed(() => this.dados() !== null);

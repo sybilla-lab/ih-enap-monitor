@@ -1,0 +1,185 @@
+@if (!dados.carregado()) {
+  <mat-progress-bar mode="indeterminate" aria-label="Carregando o banco de soluções" />
+} @else {
+  <div class="pagina">
+    <header class="app-masthead app-masthead--editorial">
+      <p class="app-masthead__eyebrow">Soluções</p>
+      <h1 class="app-masthead__titulo">O que o ecossistema propôs aos desafios</h1>
+      <p class="app-masthead__lead">
+        O Banco de Soluções reúne tudo que foi submetido aos desafios da parceria: a solução, a
+        equipe por trás dela, o desafio escolhido e o estágio em que parou. É a mesma fonte dos
+        números de soluções e participantes da Home. A aba não registra data de inscrição, então
+        esta página não tem recorte por ano — os recortes aqui são os da própria fonte.
+      </p>
+    </header>
+
+    @if (vazio()) {
+      <section class="app-card estado-vazio">
+        <h2>A planilha carregada não tem o Banco de Soluções</h2>
+        <p>
+          O painel procura uma aba chamada “Soluções” (ou “Banco de Soluções CRM”, como a planilha
+          ainda a exporta). Sem ela, esta página fica vazia e os cards de soluções e participantes
+          não aparecem na Home — o resto do painel continua funcionando normalmente.
+        </p>
+      </section>
+    } @else {
+      <section class="kpis" aria-label="Números do banco de soluções">
+        <app-stat-tile
+          label="Soluções no banco"
+          [value]="resumo().total"
+          hint="inscritas nos desafios da parceria"
+          icon="lightbulb"
+          tone="accent"
+        />
+        <app-stat-tile
+          label="Participantes"
+          [value]="resumo().participantes"
+          hint="pessoas distintas nas equipes"
+          icon="groups"
+        />
+        <app-stat-tile
+          label="Projetos de origem"
+          [value]="resumo().projetos"
+          hint="editais e programas"
+          icon="workspaces"
+        />
+        <app-stat-tile
+          label="Estados representados"
+          [value]="resumo().ufs"
+          [hint]="
+            resumo().semUf > 0
+              ? resumo().semUf + ' soluções sem estado declarado'
+              : 'sede declarada em todas as inscrições'
+          "
+          icon="public"
+        />
+      </section>
+
+      <div class="blocos">
+        @for (bloco of blocos(); track bloco.id) {
+          <section class="app-card bloco">
+            <h2 class="bloco__titulo">{{ bloco.titulo }}</h2>
+            <p class="bloco__subtitulo">{{ bloco.subtitulo }}</p>
+
+            <ul class="ranking">
+              @for (f of bloco.fatias; track f.rotulo) {
+                <li class="ranking__item">
+                  <span class="ranking__rotulo">{{ f.rotulo }}</span>
+                  <span class="ranking__valor">{{ f.valor }}</span>
+                  <span class="ranking__barra" role="presentation">
+                    <span class="ranking__fill" [style.width.%]="f.pct"></span>
+                  </span>
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+
+      <section class="app-card bloco">
+        <div class="lista__cabecalho">
+          <div>
+            <h2 class="bloco__titulo">Todas as soluções</h2>
+            <p class="bloco__subtitulo">
+              A lista inteira do banco. Nomes, e-mails e telefones das equipes ficam na planilha e
+              não são lidos pelo painel — aqui a equipe aparece só como quantidade de pessoas.
+            </p>
+          </div>
+          <span class="lista__contagem">{{ rotuloLista() }}</span>
+        </div>
+
+        <div class="filtros" role="group" aria-label="Recortar a lista de soluções">
+          <div class="filtros__grupo">
+            <span class="filtros__rotulo">Projeto</span>
+            @for (p of projetos(); track p) {
+              <button
+                type="button"
+                class="chip"
+                [class.chip--ativo]="projetoAtivo() === p"
+                [attr.aria-pressed]="projetoAtivo() === p"
+                (click)="alternarProjeto(p)"
+              >
+                {{ p }}
+              </button>
+            }
+          </div>
+
+          <div class="filtros__grupo">
+            <span class="filtros__rotulo">Estágio</span>
+            @for (s of status(); track s) {
+              <button
+                type="button"
+                class="chip"
+                [class.chip--ativo]="statusAtivo() === s"
+                [attr.aria-pressed]="statusAtivo() === s"
+                (click)="alternarStatus(s)"
+              >
+                {{ s }}
+              </button>
+            }
+          </div>
+
+          <div class="filtros__grupo filtros__grupo--busca">
+            <label class="busca">
+              <mat-icon aria-hidden="true">search</mat-icon>
+              <input
+                type="search"
+                class="busca__campo"
+                placeholder="Buscar por solução, desafio ou cidade"
+                [value]="busca()"
+                (input)="aoBuscar($event)"
+              />
+            </label>
+            @if (temRecorte()) {
+              <button type="button" class="chip chip--limpar" (click)="limpar()">
+                Limpar recortes
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="rolagem">
+          <table class="tabela">
+            <thead>
+              <tr>
+                <th scope="col">Solução</th>
+                <th scope="col">Projeto</th>
+                <th scope="col">Estágio</th>
+                <th scope="col">Origem</th>
+                <th scope="col">Desafio</th>
+                <th scope="col" class="tabela__num">Pessoas</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of filtradas(); track $index) {
+                <tr>
+                  <th scope="row" class="tabela__nome">{{ s.nome }}</th>
+                  <td>{{ s.projeto }}</td>
+                  <td>{{ s.status }}</td>
+                  <td>
+                    {{ s.cidade || '—' }}
+                    @if (s.uf) { <span class="tabela__uf">{{ s.uf }}</span> }
+                  </td>
+                  <td class="tabela__desafio">{{ s.desafio || '—' }}</td>
+                  <td class="tabela__num">{{ s.pessoas || '—' }}</td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="6" class="tabela__vazia">
+                    Nenhuma solução com esses recortes.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    <p class="fonte">
+      Fonte: aba “Soluções” (exportada como “BANCO DE SOLUÇÕES CRM”) da Planilha Oficial de
+      Indicadores. Células marcadas como “Não coletado” ou “Não informado” na origem entram aqui
+      como dado ausente, e não como categoria.
+    </p>
+  </div>
+}

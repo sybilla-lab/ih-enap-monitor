@@ -47,9 +47,12 @@ export class HomeComponent {
 
   readonly kpis = computed(() =>
     kpisDaParceria(
-      this.dados.indicadores(),
-      this.dados.entregas(),
-      this.dados.parceria(),
+      {
+        indicadores: this.dados.indicadores(),
+        entregas: this.dados.entregas(),
+        solucoes: this.dados.solucoes(),
+        parceria: this.dados.parceria(),
+      },
       this.filtro.recorte(),
       this.filtro.rotulo(),
     ),

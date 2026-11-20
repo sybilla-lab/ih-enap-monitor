@@ -43,6 +43,7 @@ export const NAV_LINHAS: NavItem[] = [
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Home', icon: 'home', route: '/home' },
   { label: 'Progresso das Metas', icon: 'track_changes', route: '/progresso' },
+  { label: 'Soluções', icon: 'lightbulb', route: '/solucoes' },
   { label: 'Comunicação', icon: 'campaign', route: '/comunicacao' },
   { label: 'Impacto Territorial', icon: 'public', route: '/territorio' },
   { label: 'Relatório Executivo', icon: 'description', route: '/relatorio' },

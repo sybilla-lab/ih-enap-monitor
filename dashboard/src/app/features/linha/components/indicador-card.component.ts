@@ -3,6 +3,8 @@ import { Component, input } from '@angular/core';
 export interface AnoDoIndicador {
   ano: number;
   meta: string;
+  /** "meta 15" / "sem meta" — o texto que vai embaixo da coluna do ano. */
+  metaRotulo: string;
   realizado: string;
   /** Altura da barra de meta, 0–100, na escala do maior ano do indicador. */
   alturaMeta: number;
@@ -80,6 +82,10 @@ export interface IndicadorApresentado {
               <span class="ano__valor" [class.ano__valor--ok]="a.atingido">
                 {{ a.vazio ? '—' : a.realizado }}
               </span>
+              <!-- A meta do ano em texto, e não só na altura do trilho: era o
+                   único número da série que o leitor precisava deduzir do
+                   desenho (revisão 04). -->
+              <span class="ano__meta-rotulo">{{ a.metaRotulo }}</span>
               <span class="ano__rotulo">
                 {{ a.ano }}
                 @if (a.emCurso && !a.vazio) { <em>em curso</em> }
@@ -262,6 +268,13 @@ export interface IndicadorApresentado {
         &--ok {
           color: var(--app-viz-accent);
         }
+      }
+
+      &__meta-rotulo {
+        font-size: 10px;
+        font-variant-numeric: tabular-nums;
+        color: var(--mat-sys-on-surface-variant);
+        white-space: nowrap;
       }
 
       &__rotulo {

@@ -155,10 +155,78 @@ export interface Comunicacao {
 export interface EntregasOperacionais {
   /** Projetos distintos registrados nas abas de atividades das linhas I, II e III. */
   projetos: ContagemPorAno;
-  /** Soluções enviadas aos desafios (coluna "SOLUÇÕES ENVIADAS" da Linha I). */
-  solucoes: ContagemPorAno;
-  /** Participantes inscritos nos desafios da Linha I. */
-  participantesDesafios: ContagemPorAno;
   /** Premiação paga aos desafios, da aba LIV - Premiação (total geral por ano). */
   premiacao: ContagemPorAno;
+}
+
+/**
+ * Uma solução do Banco de Soluções (aba "Soluções").
+ *
+ * É o cadastro do que o ecossistema submeteu aos desafios da parceria: uma
+ * linha por solução, com a origem (o edital/projeto em que ela entrou), o
+ * estágio em que parou e de onde vem a equipe. Nomes, e-mails e telefones estão
+ * na planilha e não são lidos — o painel conta pessoas, não as identifica.
+ */
+export interface Solucao {
+  nome: string;
+  /** Projeto/edital de origem — é o que a aba chama de "fonte". */
+  projeto: string;
+  /** "Inscrito", "Selecionado", "Premiado" — estágio em que a solução parou. */
+  status: string;
+  uf: string | null;
+  cidade: string;
+  /** Áreas de atuação declaradas pela equipe (a célula traz várias). */
+  areas: string[];
+  desafio: string;
+  /** Pessoas distintas na equipe responsável pela solução. */
+  pessoas: number;
+}
+
+/**
+ * O Banco de Soluções inteiro.
+ *
+ * Não tem data: a aba não traz coluna de período e as soluções herdariam o ano
+ * do edital por semelhança de nome — inferência que daria número errado sem
+ * avisar. Por isso os dois KPIs que saem daqui são acumulados do banco e não
+ * respondem ao recorte por ano, o que o próprio card declara.
+ */
+export interface BancoSolucoes {
+  solucoes: Solucao[];
+  /**
+   * Pessoas distintas no banco: a mesma equipe aparece em mais de uma inscrição
+   * e seria contada duas vezes somando linha a linha. A chave é o e-mail
+   * quando existe, e o nome quando não.
+   */
+  participantes: number;
+}
+
+/**
+ * Um evento, oficina ou participação em Semana de Inovação da Linha III
+ * (aba "LIII - Eventos, oficinas e SI + NPS").
+ */
+export interface EventoLinhaIII {
+  nome: string;
+  data: string;
+  ano: number | null;
+  /** Qual meta da Linha III o evento cumpre — é o que define o que entra na conta. */
+  classificacao: string;
+  formato: string;
+  tema: string;
+  inscricoes: number;
+  participantes: number;
+  /** NPS apurado no evento; null quando não houve coleta. */
+  nps: number | null;
+}
+
+/**
+ * Classificações que contam como "evento realizado" na Linha III, conforme a
+ * revisão 04: as atividades de conexão/networking e as oficinas do Plano
+ * Adicional. Cocriação, conteúdo produzido e Semana de Inovação são metas
+ * próprias da linha e ficam fora desta contagem.
+ */
+export function ehEventoDeConexao(classificacao: string): boolean {
+  return (
+    /atividades que promovam conex/i.test(classificacao) ||
+    /oficinas.*plano adicional/i.test(classificacao)
+  );
 }

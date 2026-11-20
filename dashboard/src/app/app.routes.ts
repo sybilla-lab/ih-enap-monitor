@@ -49,6 +49,15 @@ export const routes: Routes = [
     loadComponent: carregarLinha,
   },
   {
+    path: 'solucoes',
+    title: 'Soluções — Parceria Enap × Impact Hub Brasil',
+    // Sem recorte por ano: a aba "Soluções" não tem data, e oferecer um filtro
+    // que a página ignora é pior do que não oferecê-lo.
+    data: { filtros: [] },
+    loadComponent: () =>
+      import('./features/solucoes/solucoes.component').then((m) => m.SolucoesComponent),
+  },
+  {
     path: 'comunicacao',
     title: 'Comunicação — Parceria Enap × Impact Hub Brasil',
     data: { filtros: ['ano'] },

@@ -59,7 +59,7 @@ import { ThemeService } from '../../core/services/theme.service';
           <span class="alvo__chamada">
             {{ dados.carregando() ? 'Lendo a planilha…' : 'Arraste a planilha aqui ou clique para escolher' }}
           </span>
-          <span class="alvo__formato">Arquivo .xlsx · abas Metas, Parceria, Linha I, Linha II, agentes e organizações</span>
+          <span class="alvo__formato">Arquivo .xlsx · abas Metas, Parceria, Soluções, eventos da Linha III, comunicação, agentes e organizações</span>
         </label>
 
         @if (dados.carregando()) {

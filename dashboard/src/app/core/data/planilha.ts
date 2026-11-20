@@ -2,16 +2,19 @@ import type * as XLSX from 'xlsx';
 import {
   ANOS_PARCERIA,
   AportePorAno,
+  BancoSolucoes,
   Comunicacao,
   MesComunicacao,
   MetricaComunicacao,
   ContagemPorAno,
   EntregasOperacionais,
   EscalaDesafios,
+  EventoLinhaIII,
   Indicador,
   LinhaAcaoId,
   MetaAnual,
   ParceriaResumo,
+  Solucao,
   UnidadeIndicador,
 } from '../models/indicadores.model';
 import {
@@ -41,7 +44,7 @@ import { parseNumero } from '../util/numero.util';
  * Comunicação apareceu vazia com a planilha certa carregada): em vez de exibir
  * meio painel, o app descarta o que guardou e pede a planilha de novo.
  */
-export const VERSAO_DADOS = 2;
+export const VERSAO_DADOS = 3;
 
 export interface DadosPainel {
   versao: number;
@@ -52,6 +55,8 @@ export interface DadosPainel {
   territorio: TerritorioBruto;
   entregas: EntregasOperacionais;
   comunicacao: Comunicacao;
+  solucoes: BancoSolucoes;
+  eventos: EventoLinhaIII[];
 }
 
 export class PlanilhaInvalidaError extends Error {
@@ -71,12 +76,18 @@ export async function lerPlanilha(arquivo: File): Promise<DadosPainel> {
   const XLSXlib = await import('xlsx');
   const wb = XLSXlib.read(await arquivo.arrayBuffer(), { type: 'array' });
 
-  const nomeDaAba = (nome: string) => wb.SheetNames.find((n) => n.trim() === nome.trim());
+  // Nome exato quando se sabe o nome, expressão quando não: o Excel corta o
+  // nome da aba em 31 caracteres ("LIII - Eventos, oficinas e SI + NPS" chega
+  // truncado) e o cliente renomeia abas entre exportações.
+  const nomeDaAba = (nome: string | RegExp) =>
+    typeof nome === 'string'
+      ? wb.SheetNames.find((n) => n.trim() === nome.trim())
+      : wb.SheetNames.find((n) => nome.test(n.trim()));
   const faltando = ABAS_OBRIGATORIAS.filter((n) => !nomeDaAba(n));
   if (faltando.length) throw new PlanilhaInvalidaError(faltando);
 
   /** Linhas da aba como matriz de texto já formatado (é o que revela % e R$). */
-  const linhas = (nome: string): string[][] => {
+  const linhas = (nome: string | RegExp): string[][] => {
     const aba = nomeDaAba(nome);
     if (!aba) return [];
     return XLSXlib.utils.sheet_to_json<string[]>(wb.Sheets[aba], {
@@ -95,6 +106,8 @@ export async function lerPlanilha(arquivo: File): Promise<DadosPainel> {
     territorio: lerTerritorio(linhas),
     entregas: lerEntregas(linhas),
     comunicacao: lerComunicacao(linhas),
+    solucoes: lerSolucoes(linhas),
+    eventos: lerEventos(linhas),
   };
 }
 
@@ -213,11 +226,12 @@ function somar(c: ContagemPorAno, valor: number, ano: number | null): void {
  * Todos saem das abas operacionais e por isso trazem também o ano de cada
  * registro — sem isso o KPI não responderia ao filtro. Registros sem data
  * entram no acumulado e ficam fora dos recortes anuais, sempre declarados.
+ *
+ * Soluções e participantes saíram daqui na revisão 04: passaram a ser contados
+ * no Banco de Soluções (`lerSolucoes`), que é a fonte que o cliente acompanha.
  */
-function lerEntregas(linhas: (nome: string) => string[][]): EntregasOperacionais {
+function lerEntregas(linhas: (nome: string | RegExp) => string[][]): EntregasOperacionais {
   const projetos = contagemVazia();
-  const solucoes = contagemVazia();
-  const participantes = contagemVazia();
   const premiacao = contagemVazia();
 
   /** Projetos distintos: a mesma iniciativa aparece em várias linhas de atividade. */
@@ -243,23 +257,6 @@ function lerEntregas(linhas: (nome: string) => string[][]): EntregasOperacionais
   contarProjetos('Linha II Aceleracao', /^PROJETO/i, /DATA INICIAL/i);
   contarProjetos('Linha III - Comunidade e Cultur', /^PROJETO/i, /DATA INICIAL/i);
 
-  // Soluções e participantes vêm das colunas de resultado dos desafios (Linha I).
-  {
-    const rows = linhas('Linha I Desafios');
-    const hIdx = rows.findIndex((r) => r.some((c) => /LINHA DE A[ÇC]/i.test((c ?? '').trim())));
-    if (hIdx >= 0) {
-      const h = rows[hIdx];
-      const iSolucoes = coluna(h, /SOLU[ÇC][ÕO]ES ENVIADAS/i);
-      const iInscritos = coluna(h, /TOTAL DE PARTICIPANTES INSCRITOS/i);
-      const iDi = coluna(h, /DATA INICIAL/i);
-      for (const row of rows.slice(hIdx + 1)) {
-        const ano = anoDasDatas(row[iDi] ?? '', row[iDi + 1] ?? '');
-        if (iSolucoes >= 0) somar(solucoes, parseNumero(row[iSolucoes]), ano);
-        if (iInscritos >= 0) somar(participantes, parseNumero(row[iInscritos]), ano);
-      }
-    }
-  }
-
   // Premiação: a aba LIV traz um resumo "Ano | Total Geral" à direita do
   // detalhamento — é o número que o cliente acompanha, então é o usado aqui.
   {
@@ -275,7 +272,7 @@ function lerEntregas(linhas: (nome: string) => string[][]): EntregasOperacionais
     }
   }
 
-  return { projetos, solucoes, participantesDesafios: participantes, premiacao };
+  return { projetos, premiacao };
 }
 
 // -------------------------------------------------------- Comunicação ----
@@ -351,6 +348,159 @@ function lerComunicacao(linhas: (nome: string) => string[][]): Comunicacao {
   });
 
   return { meses, metricas: metricas.filter((m) => m.total > 0) };
+}
+
+// ------------------------------------------------ Banco de Soluções ----
+
+/**
+ * A aba do Banco de Soluções. O cliente chama de "Soluções"; a planilha ainda
+ * exporta "BANCO DE SOLUÇÕES CRM" — o painel aceita as duas, para a aba poder
+ * ser renomeada sem derrubar a página.
+ */
+const ABA_SOLUCOES = /^(solu[çc][õo]es|banco de solu[çc][õo]es.*)$/i;
+
+/**
+ * Texto de preenchimento do CRM. A equipe marca o que não foi coletado em vez
+ * de deixar a célula vazia, e exibir "Não coletado" como se fosse um estado ou
+ * uma área de atuação sujaria todos os agrupamentos da página.
+ */
+const SEM_INFORMACAO = /^(n[ãa]o coletad[oa]|n[ãa]o informad[oa]|ainda n[ãa]o possue|n\/a|-+)$/i;
+
+const limpo = (valor: string | undefined): string => {
+  const t = (valor ?? '').trim();
+  return SEM_INFORMACAO.test(t) ? '' : t;
+};
+
+/**
+ * Aba "Soluções": uma linha por solução submetida aos desafios da parceria.
+ *
+ * A aba não tem data — nem da inscrição, nem do edital. Os projetos de origem
+ * têm ano nas abas operacionais, mas só dá para ligá-los por semelhança de
+ * nome ("Hackaton Impulso Regional" × "Hackathon Impulso Regional: acelerando
+ * territórios para a inovação"), e um palpite desses erra calado. Então o banco
+ * é lido sem ano, e quem exibe o número declara que ele é o acumulado.
+ */
+function lerSolucoes(linhas: (nome: string | RegExp) => string[][]): BancoSolucoes {
+  const rows = linhas(ABA_SOLUCOES);
+  const reNome = /NOME DO PROJETO\s*\/\s*SOLU[ÇC][ÃA]O/i;
+  const hIdx = rows.findIndex((r) => coluna(r, reNome) >= 0);
+  if (hIdx < 0) return { solucoes: [], participantes: 0 };
+
+  const h = rows[hIdx];
+  const iNome = coluna(h, reNome);
+  const iProjeto = coluna(h, /^PROJETO$/i);
+  const iStatus = coluna(h, /^STATUS/i);
+  const iResponsavel = coluna(h, /^RESPONS[ÁA]VEL$/i);
+  const iEmail = coluna(h, /^E-?MAIL$/i);
+  const iEstado = coluna(h, /^ESTADO/i);
+  const iCidade = coluna(h, /^CIDADE/i);
+  const iDesafio = coluna(h, /DESAFIO ESCOLHIDO/i);
+  const iArea = coluna(h, /[ÁA]REA DE ATUA[ÇC][ÃA]O/i);
+
+  // Uma equipe se inscreve em mais de um desafio: somar as pessoas linha a
+  // linha contaria as mesmas de novo. O e-mail é a chave quando existe (a
+  // planilha avisa que há duplicatas de nome), e o nome quando não existe.
+  const pessoasDoBanco = new Set<string>();
+
+  const solucoes: Solucao[] = [];
+  for (const row of rows.slice(hIdx + 1)) {
+    // Basta a célula do nome não estar vazia: uma inscrição marcada "N/A" ali
+    // existe, e descartá-la faria o painel divergir em uma solução do total
+    // que a própria aba declara no topo.
+    if (!(row[iNome] ?? '').trim()) continue;
+    const nome = limpo(row[iNome]) || 'Solução sem nome declarado';
+
+    const emails = partes(row[iEmail]).filter((p) => p.includes('@'));
+    const nomes = partes(row[iResponsavel]);
+    const chaves = emails.length
+      ? emails.map((e) => e.toLowerCase())
+      : nomes.map((n) => `nome:${normalizar(n)}`);
+    chaves.forEach((c) => pessoasDoBanco.add(c));
+
+    solucoes.push({
+      nome,
+      projeto: limpo(row[iProjeto]) || 'Sem projeto declarado',
+      status: limpo(row[iStatus]) || 'Sem status',
+      uf: ufDoTexto(limpo(row[iEstado])),
+      cidade: limpo(row[iCidade]),
+      // Vírgula e ponto e vírgula separam áreas; a barra, não — "Social/
+      // Socioeconômico" é um rótulo só na taxonomia da equipe.
+      areas: limpo(row[iArea])
+        .split(/[,;]/)
+        .map((a) => a.trim())
+        .filter(Boolean),
+      desafio: limpo(row[iDesafio]),
+      pessoas: new Set(chaves).size,
+    });
+  }
+
+  return { solucoes, participantes: pessoasDoBanco.size };
+}
+
+/** Células com vários itens numa só: quebra de linha, ponto e vírgula ou vírgula. */
+function partes(celula: string | undefined): string[] {
+  return (celula ?? '')
+    .split(/[\n;,]/)
+    .map((p) => p.trim())
+    .filter((p) => p && !SEM_INFORMACAO.test(p));
+}
+
+/** "São Paulo - SP", "SP", "são paulo" — qualquer das formas vira a sigla. */
+function ufDoTexto(texto: string): string | null {
+  for (const token of texto.split(/[-–,;/]/)) {
+    const uf = tokenParaUf(token);
+    if (uf) return uf;
+  }
+  return null;
+}
+
+// ------------------------------------------------- Eventos da Linha III ----
+
+/**
+ * Aba "LIII - Eventos, oficinas e SI + NPS": uma linha por evento, com
+ * inscrições, participantes e NPS.
+ *
+ * Todos os eventos são lidos, inclusive os que cumprem outras metas da linha
+ * (cocriação, conteúdo, Semana de Inovação) — quem decide o que entra em cada
+ * contagem é a página, por `ehEventoDeConexao`. A aba termina com uma linha de
+ * totais sem nome de evento, que o filtro do nome já descarta.
+ */
+function lerEventos(linhas: (nome: string | RegExp) => string[][]): EventoLinhaIII[] {
+  const rows = linhas(/^LIII - Eventos/i);
+  const hIdx = rows.findIndex((r) => coluna(r, /^Evento$/i) >= 0);
+  if (hIdx < 0) return [];
+
+  const h = rows[hIdx];
+  const iNome = coluna(h, /^Evento$/i);
+  const iData = coluna(h, /^Data$/i);
+  const iAno = coluna(h, /^Ano$/i);
+  const iClasse = coluna(h, /Classifica[çc][ãa]o/i);
+  const iFormato = coluna(h, /^Formato$/i);
+  const iInscricoes = coluna(h, /inscri[çc][õo]es/i);
+  const iParticipantes = coluna(h, /participantes/i);
+  const iTema = coluna(h, /^Tema$/i);
+  const iNps = coluna(h, /^NPS$/i);
+
+  const eventos: EventoLinhaIII[] = [];
+  for (const row of rows.slice(hIdx + 1)) {
+    const nome = (row[iNome] ?? '').trim();
+    if (!nome) continue;
+
+    const ano = Number((row[iAno] ?? '').trim()) || anoDasDatas(row[iData] ?? '');
+    const nps = parseNumero(row[iNps]);
+    eventos.push({
+      nome,
+      data: (row[iData] ?? '').trim(),
+      ano: ano || null,
+      classificacao: (row[iClasse] ?? '').trim(),
+      formato: (row[iFormato] ?? '').trim(),
+      tema: (row[iTema] ?? '').trim(),
+      inscricoes: parseNumero(row[iInscricoes]),
+      participantes: parseNumero(row[iParticipantes]),
+      nps: nps > 0 ? nps : null,
+    });
+  }
+  return eventos;
 }
 
 // --------------------------------------------------------- Territorial ----

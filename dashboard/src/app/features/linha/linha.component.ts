@@ -15,6 +15,7 @@ import {
 import { cumprimento, valoresDoRecorte } from '../../core/util/agregacao.util';
 import { formatMoeda, formatPercentual, formatQuantidade } from '../../core/util/numero.util';
 import { RetornoBlocosComponent } from './components/retorno-blocos.component';
+import { EventosLinhaIiiComponent } from './components/eventos-linha-iii.component';
 import {
   IndicadorApresentado,
   IndicadorCardComponent,
@@ -32,7 +33,12 @@ import {
 @Component({
   selector: 'app-linha',
   standalone: true,
-  imports: [MatProgressBarModule, RetornoBlocosComponent, IndicadorCardComponent],
+  imports: [
+    MatProgressBarModule,
+    RetornoBlocosComponent,
+    IndicadorCardComponent,
+    EventosLinhaIiiComponent,
+  ],
   templateUrl: './linha.component.html',
   styleUrl: './linha.component.scss',
 })
@@ -99,6 +105,7 @@ export class LinhaComponent {
           return {
             ano,
             meta: v.meta > 0 ? formatar(v.meta) : '—',
+            metaRotulo: v.meta > 0 ? `meta ${formatar(v.meta)}` : 'sem meta',
             realizado: vazio ? '—' : formatar(v.realizado),
             alturaMeta: (v.meta / maior) * 100,
             alturaRealizado: (v.realizado / maior) * 100,
@@ -115,6 +122,9 @@ export class LinhaComponent {
 
   /** A Linha IV carrega também a leitura financeira da parceria. */
   readonly mostrarRetorno = computed(() => this.linha().id === 'Linha IV');
+
+  /** A Linha III carrega o bloco de eventos (revisão 04). */
+  readonly mostrarEventos = computed(() => this.linha().id === 'Linha III');
 }
 
 /** Formatação por unidade — a mesma regra usada no resto do painel. */

@@ -80,12 +80,15 @@ export class RelatorioComponent {
     return { pct: c.pct, valor: formatPercentual(c.pct), total: c.total, atingidos: c.atingidos };
   });
 
-  /** Os mesmos dez KPIs da Home — uma lista só para as duas saídas. */
+  /** Os mesmos KPIs da Home — uma lista só para as duas saídas. */
   readonly numerosChave = computed(() =>
     kpisDaParceria(
-      this.dados.indicadores(),
-      this.dados.entregas(),
-      this.dados.parceria(),
+      {
+        indicadores: this.dados.indicadores(),
+        entregas: this.dados.entregas(),
+        solucoes: this.dados.solucoes(),
+        parceria: this.dados.parceria(),
+      },
       this.filtro.recorte(),
       this.filtro.rotulo(),
     ),
